@@ -1,14 +1,12 @@
 package com.example.pio;
 
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.ScaleTransition;
-import javafx.animation.Timeline;
+import javafx.animation.*;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.effect.DropShadow;
@@ -29,21 +27,30 @@ public class HelloApplication extends Application {
     private Scene scene;
     private Image clickerImage;
     private Button imageButton;
+    private Button firstUpgrade;
+    private Button secondUpgrade;
+    private Button thirdUpgrade;
+    private Button fourthUpgrade;
     private BorderPane root;
     private Text timerText;
-    private int secondsElapsed = 0;
+    private long secondsElapsed = 0;
+    private boolean isAnimationRunning = false;
 
     private Text coins;
     private Text counterText;
-    private Integer counterCoins = 0;
+    private Double counterCoins = 0D;
 
     private Text perClick;
     private Text perClickText;
-    private Integer counterPerClick = 1;
+    private Double counterPerClick = 1D;
 
     private Text perSecond;
     private Text perSecondText;
-    private Integer counterPerSecond = 0;
+    private Double counterPerSecond = 0D;
+
+    private Text cursor;
+    private Text cursorText;
+    private Double counterCursor = 0D;
 
     public static void main(String[] args) {
         launch(args);
@@ -115,51 +122,9 @@ public class HelloApplication extends Application {
         pane3.setPrefHeight(scene.getHeight());
         pane3.setLayoutX(backgroundWidth * 2);
 
-        double redRectangleWidth = backgroundWidth3 - 40;
-        double redRectangleHeight = 300;
-        double redRectangleX = 20;
-        double redRectangleY = 20;
-
-        Rectangle redRectangle = new Rectangle(redRectangleX, redRectangleY, redRectangleWidth, redRectangleHeight);
-        redRectangle.setFill(Color.RED);
-        pane3.getChildren().add(redRectangle);
-
-        // Create text inside red rectangle
-        String[] redRectangleTexts = {"Marcin       8", "Mateusz       7", "Patryk     9", "Hubert     9"};
-        double textY = redRectangleY + (redRectangleHeight / 7);
-
-        for (int i = 0; i < redRectangleTexts.length; i++) {
-            Text text = new Text(redRectangleX + 10, textY, redRectangleTexts[i]);
-            text.setFont(Font.font("Arial", FontWeight.BOLD, 40));
-            text.setFill(Color.WHITE);
-            pane3.getChildren().add(text);
-
-            textY += 80; // Adjust the vertical position for each text
-        }
-
-        // Create rectangles
-        double rectangleWidth = backgroundWidth3 - 40;
-        double rectangleHeight = (scene.getHeight() - 450) / 4;
-        double yPosition = 400;
-
-        String[] rectangleTexts = {"XmarcinD 1", "DARIUSZ KOWALINSKI 2", "ta krew od razu 3", "Babcia 4"};
-
-        for (int i = 0; i < 4; i++) {
-            Rectangle rectangle = new Rectangle(20, yPosition, rectangleWidth, rectangleHeight);
-            rectangle.setFill(Color.WHITE);
-            pane3.getChildren().add(rectangle);
-
-            Text text = new Text(rectangleTexts[i]);
-            text.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-            text.setFill(Color.BLACK);
-            text.setLayoutX(30);
-            text.setLayoutY(yPosition + (rectangleHeight / 2) + 5);
-            pane3.getChildren().add(text);
-
-            yPosition += rectangleHeight + 10;
-        }
-
         mainPane.getChildren().add(pane3);
+
+        createUpgrades();
     }
 
     public void setImageButton() {
@@ -206,19 +171,19 @@ public class HelloApplication extends Application {
     }
 
     public void createCounters() {
-        counterText = new Text("0");
+        counterText = new Text("0.0");
         counterText.setLayoutX(195);
         counterText.setLayoutY(220);
         counterText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
         root.getChildren().add(counterText);
 
-        perClickText = new Text("1");
+        perClickText = new Text("1.0");
         perClickText.setLayoutX(195);
         perClickText.setLayoutY(610);
         perClickText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
         root.getChildren().add(perClickText);
 
-        perSecondText = new Text("0");
+        perSecondText = new Text("0.0");
         perSecondText.setLayoutX(195);
         perSecondText.setLayoutY(700);
         perSecondText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
@@ -297,5 +262,196 @@ public class HelloApplication extends Application {
         timeline.play();
 
         root.getChildren().add(timerText);
+    }
+
+    public void createUpgrades() {
+        firstUpgrade = new Button();
+        firstUpgrade.setPrefWidth(350);
+        firstUpgrade.setPrefHeight(80);
+
+        firstUpgrade.setStyle("-fx-background-color: #6495ED; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+
+        Text buttonTextCursor = new Text("Cursor");
+        buttonTextCursor.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        buttonTextCursor.setFill(Color.WHITE);
+        firstUpgrade.setGraphic(buttonTextCursor);
+
+        firstUpgrade.setLayoutX(830);
+        firstUpgrade.setLayoutY(400);
+
+        firstUpgrade.setOnMousePressed(event -> firstUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+
+        // Zmiana stylu po puszczeniu przycisku
+        firstUpgrade.setOnMouseReleased(event -> firstUpgrade.setStyle("-fx-background-color: #6495ED; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+
+
+        firstUpgrade.setOnMouseEntered(event -> {
+            firstUpgrade.setCursor(Cursor.HAND);
+        });
+
+        firstUpgrade.setOnMouseExited(event -> {
+            firstUpgrade.setCursor(Cursor.DEFAULT);
+        });
+
+        firstUpgrade.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                counterCoins++;
+                counterText.setText(counterCoins.toString());
+                if (!isAnimationRunning) {
+                    playTextAnimation();
+                }
+            }
+        });
+
+        // drugi
+
+        secondUpgrade = new Button();
+        secondUpgrade.setPrefWidth(350);
+        secondUpgrade.setPrefHeight(80);
+
+        secondUpgrade.setStyle("-fx-background-color: #6495ED; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+
+        Text buttonTextDogeCoin = new Text("Dogecoin");
+        buttonTextDogeCoin.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        buttonTextDogeCoin.setFill(Color.WHITE);
+        secondUpgrade.setGraphic(buttonTextDogeCoin);
+
+        secondUpgrade.setLayoutX(830);
+        secondUpgrade.setLayoutY(500);
+
+        secondUpgrade.setOnMousePressed(event -> secondUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+
+        // Zmiana stylu po puszczeniu przycisku
+        secondUpgrade.setOnMouseReleased(event -> secondUpgrade.setStyle("-fx-background-color: #6495ED; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+
+
+        secondUpgrade.setOnMouseEntered(event -> {
+            secondUpgrade.setCursor(Cursor.HAND);
+        });
+
+        secondUpgrade.setOnMouseExited(event -> {
+            secondUpgrade.setCursor(Cursor.DEFAULT);
+        });
+
+        secondUpgrade.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                counterCoins++;
+                counterText.setText(counterCoins.toString());
+            }
+        });
+
+        // trzeci
+
+        thirdUpgrade = new Button();
+        thirdUpgrade.setPrefWidth(350);
+        thirdUpgrade.setPrefHeight(80);
+
+        thirdUpgrade.setStyle("-fx-background-color: #6495ED; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+
+        Text buttonTextEthereum = new Text("Ethereum");
+        buttonTextEthereum.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        buttonTextEthereum.setFill(Color.WHITE);
+        thirdUpgrade.setGraphic(buttonTextEthereum);
+
+        thirdUpgrade.setLayoutX(830);
+        thirdUpgrade.setLayoutY(600);
+
+        thirdUpgrade.setOnMousePressed(event -> thirdUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+
+        // Zmiana stylu po puszczeniu przycisku
+        thirdUpgrade.setOnMouseReleased(event -> thirdUpgrade.setStyle("-fx-background-color: #6495ED; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+
+
+        thirdUpgrade.setOnMouseEntered(event -> {
+            thirdUpgrade.setCursor(Cursor.HAND);
+        });
+
+        thirdUpgrade.setOnMouseExited(event -> {
+            thirdUpgrade.setCursor(Cursor.DEFAULT);
+        });
+
+        thirdUpgrade.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                counterCoins++;
+                counterText.setText(counterCoins.toString());
+            }
+        });
+
+        // czwarty
+
+        fourthUpgrade = new Button();
+        fourthUpgrade.setPrefWidth(350);
+        fourthUpgrade.setPrefHeight(80);
+
+        fourthUpgrade.setStyle("-fx-background-color: #6495ED; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+
+        Text buttonTextBitcoin = new Text("Bitcoin");
+        buttonTextBitcoin.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        buttonTextBitcoin.setFill(Color.WHITE);
+        fourthUpgrade.setGraphic(buttonTextBitcoin);
+
+        fourthUpgrade.setLayoutX(830);
+        fourthUpgrade.setLayoutY(700);
+
+        fourthUpgrade.setOnMousePressed(event -> fourthUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+
+        // Zmiana stylu po puszczeniu przycisku
+        fourthUpgrade.setOnMouseReleased(event -> fourthUpgrade.setStyle("-fx-background-color: #6495ED; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+
+
+        fourthUpgrade.setOnMouseEntered(event -> {
+            fourthUpgrade.setCursor(Cursor.HAND);
+        });
+
+        fourthUpgrade.setOnMouseExited(event -> {
+            fourthUpgrade.setCursor(Cursor.DEFAULT);
+        });
+
+        fourthUpgrade.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                counterCoins++;
+                counterText.setText(counterCoins.toString());
+            }
+        });
+
+
+        mainPane.getChildren().add(firstUpgrade);
+        mainPane.getChildren().add(secondUpgrade);
+        mainPane.getChildren().add(thirdUpgrade);
+        mainPane.getChildren().add(fourthUpgrade);
+    }
+
+    private void playTextAnimation() {
+        Text text = new Text("Not enough money");
+        text.setFont(Font.font("Arial", 26));
+
+        TranslateTransition transition = new TranslateTransition(Duration.seconds(1), text);
+        transition.setFromX(490);
+        transition.setToX(490);
+        transition.setFromY(770);
+        transition.setToY(650);
+
+        FadeTransition fadeTransition = new FadeTransition(Duration.seconds(1), text);
+        fadeTransition.setFromValue(1.0);
+        fadeTransition.setToValue(0.0);
+
+        transition.setOnFinished(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                fadeTransition.play();
+            }
+        });
+
+        transition.play();
+
+        mainPane.getChildren().add(text);
+    }
+
+    private void addToScorePerClick() {
+
     }
 }
