@@ -1,5 +1,9 @@
 package com.example.pio;
 
+import com.example.pio.upgrade.perclick.MyCursor;
+import com.example.pio.upgrade.persecond.Bitcoin;
+import com.example.pio.upgrade.persecond.DogeCoin;
+import com.example.pio.upgrade.persecond.Ethereum;
 import javafx.animation.*;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -14,7 +18,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -51,6 +54,18 @@ public class HelloApplication extends Application {
     private Text cursor;
     private Text cursorText;
     private Double counterCursor = 0D;
+
+    private final MyCursor myCursor;
+    private final Bitcoin bitcoin;
+    private final Ethereum ethereum;
+    private final DogeCoin dogeCoin;
+
+    public HelloApplication() {
+        this.bitcoin = new Bitcoin();
+        this.myCursor = new MyCursor();
+        this.ethereum = new Ethereum();
+        this.dogeCoin = new DogeCoin();
+    }
 
     public static void main(String[] args) {
         launch(args);
@@ -155,7 +170,7 @@ public class HelloApplication extends Application {
         imageButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                counterCoins++;
+                counterCoins += myCursor.getCoinsPerClick();
                 counterText.setText(counterCoins.toString());
                 perClickText.setText(counterPerClick.toString());
                 perSecondText.setText(counterPerSecond.toString());
@@ -296,11 +311,14 @@ public class HelloApplication extends Application {
         firstUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                counterCoins++;
-                counterText.setText(counterCoins.toString());
-                if (!isAnimationRunning) {
+                if(myCursor.isAvailableToBuy(counterCoins)){
+                    counterCoins -= myCursor.buyCursor();
+                }else{
                     playTextAnimation();
                 }
+                counterText.setText(counterCoins.toString());
+                perClickText.setText(counterPerClick.toString());
+                perSecondText.setText(counterPerSecond.toString());
             }
         });
 
@@ -337,8 +355,14 @@ public class HelloApplication extends Application {
         secondUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                counterCoins++;
+                if(dogeCoin.isAvailableToBuy(counterCoins)){
+                    counterCoins -= dogeCoin.buyCrypto();
+                }else{
+                    playTextAnimation();
+                }
                 counterText.setText(counterCoins.toString());
+                perClickText.setText(counterPerClick.toString());
+                perSecondText.setText(counterPerSecond.toString());
             }
         });
 
@@ -350,7 +374,7 @@ public class HelloApplication extends Application {
 
         thirdUpgrade.setStyle("-fx-background-color: #6495ED; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
 
-        Text buttonTextEthereum = new Text("Ethereum");
+        Text buttonTextEthereum =git c new Text("Ethereum");
         buttonTextEthereum.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         buttonTextEthereum.setFill(Color.WHITE);
         thirdUpgrade.setGraphic(buttonTextEthereum);
@@ -375,8 +399,14 @@ public class HelloApplication extends Application {
         thirdUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                counterCoins++;
+                if(ethereum.isAvailableToBuy(counterCoins)){
+                    counterCoins -= ethereum.buyCrypto();
+                }else{
+                    playTextAnimation();
+                }
                 counterText.setText(counterCoins.toString());
+                perClickText.setText(counterPerClick.toString());
+                perSecondText.setText(counterPerSecond.toString());
             }
         });
 
@@ -413,8 +443,14 @@ public class HelloApplication extends Application {
         fourthUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                counterCoins++;
+                if(bitcoin.isAvailableToBuy(counterCoins)){
+                    counterCoins -= bitcoin.buyCrypto();
+                }else{
+                    playTextAnimation();
+                }
                 counterText.setText(counterCoins.toString());
+                perClickText.setText(counterPerClick.toString());
+                perSecondText.setText(counterPerSecond.toString());
             }
         });
 
