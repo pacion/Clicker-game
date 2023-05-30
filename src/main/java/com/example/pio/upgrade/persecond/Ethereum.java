@@ -5,7 +5,7 @@ public class Ethereum extends UpgradePerSecond implements Cryptocurrency {
     public Ethereum() {
         setPrice(100);
         setAmount(0);
-        setCoinsPerSecond(1);
+        setCoinsPerSecond(0);
     }
 
     @Override
@@ -15,10 +15,11 @@ public class Ethereum extends UpgradePerSecond implements Cryptocurrency {
 
     @Override
     public double buyCrypto() {
-        setCoinsPerSecond(getCoinsPerSecond() + 1);
+       // setCoinsPerSecond(0.25 + getCoinsPerSecond() + getCoinsPerSecond() * 321 / 624);
+        setCoinsPerSecond(getCoinsPerSecond() * 1.32 + 0.1);
         setAmount(getAmount() + 1);
         var toReturn = getPrice();
-        setPrice(getPrice() * 2);
+        setPrice(getPrice() + (int)(getPrice() * 1.15));
         return toReturn;
     }
 }
