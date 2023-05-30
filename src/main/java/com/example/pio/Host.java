@@ -55,16 +55,22 @@ public class Host {
                     String[] parts = message.split(":");
                     if (parts.length == 2) {
                         String key = parts[0].trim();
-                        int value = Integer.parseInt(parts[1].trim());
+                        String valueString = parts[1].trim();
 
-                        synchronized (dataMap) {
-                            dataMap.put(key, value); // Store the key-value pair in the map
+                        try {
+                            int value = Integer.parseInt(valueString);
+
+                            synchronized (dataMap) {
+                                dataMap.put(key, value); // Store the key-value pair in the map
+                            }
+
+                            System.out.println("Received from client " + clientSocket.getInetAddress() +
+                                    ": " + key + " = " + value);
+
+                            out.println("Data received successfully.");
+                        } catch (NumberFormatException e) {
+                            out.println("Invalid integer format. Expected an integer value.");
                         }
-
-                        System.out.println("Received from client " + clientSocket.getInetAddress() +
-                                ": " + key + " = " + value);
-
-                        out.println("Data received successfully.");
                     } else {
                         out.println("Invalid message format. Expected key:value.");
                     }
@@ -78,5 +84,6 @@ public class Host {
                 e.printStackTrace();
             }
         }
+
     }
 }

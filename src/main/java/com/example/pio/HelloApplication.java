@@ -100,7 +100,39 @@ public class HelloApplication extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
 
+        Thread socketThread = new Thread(() -> {
+            try {
+                // Connect to the server
+                Socket socket = new Socket("10.77.21.241", 8080);
 
+                // Create reader and writer for socket communication
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+
+                // Read messages from the server
+                String message;
+                while ((message = reader.readLine()) != null) {
+                    // Process the message received from the server
+                    System.out.println("Received message: " + message);
+
+                    // Example: Send a response back to the server
+                    Random random = new Random();
+                    int randomNumber = random.nextInt(100);
+                    String nickname = "Nickname";
+                    writer.println(randomNumber + " " + nickname);
+                }
+
+                // Close the socket and streams
+                socket.close();
+                reader.close();
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        // Start the socket thread
+        socketThread.start();
     }
 
 
