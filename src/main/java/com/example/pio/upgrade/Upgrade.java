@@ -1,14 +1,14 @@
 package com.example.pio.upgrade;
 
 public class Upgrade {
-    private long price;
+    private double price;
     private long amount;
 
-    public long getPrice() {
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(long price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 

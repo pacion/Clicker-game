@@ -5,7 +5,7 @@ public class DogeCoin extends UpgradePerSecond implements Cryptocurrency {
     public DogeCoin() {
         setPrice(50);
         setAmount(0);
-        setCoinsPerSecond(1);
+        setCoinsPerSecond(0);
     }
 
     @Override
@@ -15,10 +15,10 @@ public class DogeCoin extends UpgradePerSecond implements Cryptocurrency {
 
     @Override
     public double buyCrypto() {
-        setCoinsPerSecond(getCoinsPerSecond() + 1);
+        setCoinsPerSecond(getCoinsPerSecond() * 1.20 + 0.1);
         setAmount(getAmount() + 1);
         var toReturn = getPrice();
-        setPrice(getPrice() * 2);
+        setPrice((int)(getPrice() * 1.15));
         return toReturn;
     }
 }

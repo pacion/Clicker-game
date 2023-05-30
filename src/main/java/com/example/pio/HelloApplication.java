@@ -13,16 +13,30 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.text.DecimalFormat;
+import java.util.*;
+
+import static java.lang.System.in;
 
 public class HelloApplication extends Application {
 
@@ -59,6 +73,11 @@ public class HelloApplication extends Application {
     private final Bitcoin bitcoin;
     private final Ethereum ethereum;
     private final DogeCoin dogeCoin;
+    private String nickname;
+
+    private Rectangle[] rectangles;
+    private Text[] nicknames;
+    private Text[] usersCoins;
 
     public HelloApplication() {
         this.bitcoin = new Bitcoin();
@@ -75,11 +94,9 @@ public class HelloApplication extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Crypto clicker");
 
-        createScreen();
+        createScreen(primaryStage);
 
         setImageButton();
-
-        showUser();
 
         createCounters();
 
@@ -89,13 +106,81 @@ public class HelloApplication extends Application {
 
         turnOnTimer();
 
+        createRectangles();
+
         primaryStage.setScene(scene);
         primaryStage.show();
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Nickname");
+        dialog.setHeaderText(null);
+        dialog.setContentText("Please enter your nickname:");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            nickname = result.get();
+        }
+
+        final String finalNickname = nickname;
+
+        showUser();
+
+        Thread socketThread = new Thread(() -> {
+            try {
+                Socket socket = new Socket("10.77.21.241", 8080);
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+
+                int i=0;
+                while(true) {
+                     writer.println(counterCoins + ":" + nickname + ":" + socket.getLocalAddress().getHostAddress());
+
+                    if(i == 1000000)
+                       break;
+                    try {
+                        Thread.sleep(300);
+                    }
+                    catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    updateLeaderboard(reader.readLine());
+                }
+
+                socket.close();
+                reader.close();
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        socketThread.start();
+    }
+    private static Map<String, Integer> parseMap(String mapString) {
+        Map<String, Integer> map = new HashMap<>();
+
+        String cleanedString = mapString.replace("{", "").replace("}", "").trim();
+
+        if (!cleanedString.isEmpty()) {
+            String[] pairs = cleanedString.split(",");
+
+            for (String pair : pairs) {
+                String[] keyValue = pair.trim().split("=");
+
+                if (keyValue.length == 2) {
+                    String key = keyValue[0].trim();
+                    int value = Integer.parseInt(keyValue[1].trim());
+                    map.put(key, value);
+                }
+            }
+        }
+
+        return map;
     }
 
-    public void createScreen() {
+    public void createScreen(Stage primaryStage) {
         mainPane = new Pane();
-        scene = new Scene(mainPane, 1200, 800); // szerokosc, wysokosc
+        scene = new Scene(mainPane, 1200, 800);
 
         Color backgroundColor = Color.rgb(56,36,36);
         double backgroundWidth = scene.getWidth() / 3.0;
@@ -122,7 +207,7 @@ public class HelloApplication extends Application {
 
         Image gifImage = new Image("btc.gif");
 
-        pane2.setBackground(new Background(new BackgroundImage(gifImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, BackgroundSize.DEFAULT)));
+        pane2.setBackground(new Background(new BackgroundImage(gifImage, BackgroundRepeat.REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, BackgroundSize.DEFAULT)));
 
         mainPane.getChildren().add(pane2);
 
@@ -139,11 +224,62 @@ public class HelloApplication extends Application {
 
         mainPane.getChildren().add(pane3);
 
+        createRectangles();
+
         createUpgrades();
     }
 
+    private void createRectangles() {
+        rectangles = new Rectangle[4];
+        rectangles[0] = createRectangle(Color.GOLD, 30);
+        rectangles[1] = createRectangle(Color.SILVER, 110);
+        rectangles[2] = createRectangle(Color.BROWN, 190);
+        rectangles[3] = createRectangle(Color.BLACK, 270);
+
+        mainPane.getChildren().addAll(rectangles);
+        mainPane.getChildren().addAll(nicknames);
+        mainPane.getChildren().addAll(usersCoins);
+    }
+
+    private Label createColoredLabel(String text, Color backgroundColor) {
+        Label label = new Label(text);
+        label.setBackground(new Background(new BackgroundFill(backgroundColor, null, null)));
+        label.setPadding(new Insets(5));
+        return label;
+    }
+
+    private Rectangle createRectangle(Color color, double y) {
+        nicknames = new Text[4];
+        usersCoins = new Text[4];
+
+        int offset = 80;
+
+        for(int i = 0; i < 4; i++){
+            nicknames[i] = new Text();
+            nicknames[i].setText("-----");
+            nicknames[i].setFont(Font.font("Arial", FontWeight.BOLD, 24));
+            nicknames[i].setFill(Color.rgb(140, 20, 122));
+            nicknames[i].setX(850);
+            nicknames[i].setY(70 + offset * i);
+            usersCoins[i] = new Text();
+            usersCoins[i].setText("0");
+            usersCoins[i].setFont(Font.font("Arial", FontWeight.BOLD, 24));
+            usersCoins[i].setFill(Color.rgb(241, 20, 122));
+            usersCoins[i].setX(1025);
+            usersCoins[i].setY(70 + offset * i);
+        }
+
+        Rectangle rectangle = new Rectangle();
+        rectangle.setFill(color);
+        rectangle.setHeight(60);
+        rectangle.setWidth(350);
+        rectangle.setX(830);
+        rectangle.setY(y);
+
+        return rectangle;
+    }
+
     public void setImageButton() {
-        // Tworzenie klikalnego obrazka
         clickerImage = new Image("Coin.png");
         ImageView clickerImageView = new ImageView(clickerImage);
         clickerImageView.setFitWidth(200);
@@ -171,9 +307,7 @@ public class HelloApplication extends Application {
             @Override
             public void handle(ActionEvent event) {
                 counterCoins += myCursor.getCoinsPerClick();
-                counterText.setText(counterCoins.toString());
-                perClickText.setText(counterPerClick.toString());
-                perSecondText.setText(counterPerSecond.toString());
+                upgrade();
                 scaleInTransition.setOnFinished(e -> scaleOutTransition.play());
                 scaleInTransition.play();
             }
@@ -257,7 +391,7 @@ public class HelloApplication extends Application {
     }
 
     public void showUser() {
-        Text highlightedText = new Text("Mateusz");
+        Text highlightedText = new Text(String.valueOf(nickname));
         highlightedText.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         highlightedText.setFill(Color.FUCHSIA);
 
@@ -292,13 +426,26 @@ public class HelloApplication extends Application {
         root.setCenter(stackPane);
     }
 
+    public void upgrade() {
+        var df = new DecimalFormat("#.##");
+        counterText.setText(counterCoins.toString());
+        counterText.setText(df.format(counterCoins));
+        perClickText.setText(counterPerClick.toString());
+        perSecondText.setText(counterPerSecond.toString());
+        perSecondText.setText(df.format(counterPerSecond));
+    }
+
     public void turnOnTimer() {
         Timeline timeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), event -> {
+                    upgrade();
+                    counterCoins += dogeCoin.getCoinsPerSecond();
+                    counterCoins += bitcoin.getCoinsPerSecond();
+                    counterCoins += ethereum.getCoinsPerSecond();
                     secondsElapsed++;
                     timerText.setText("Time in seconds: " + secondsElapsed);
-                })
-        );
+                }));
+
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
 
@@ -312,19 +459,29 @@ public class HelloApplication extends Application {
 
         firstUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
 
+        VBox vbox = new VBox(5);
+
         Text buttonTextCursor = new Text("Cursor");
         buttonTextCursor.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         buttonTextCursor.setFill(Color.BLACK);
-        firstUpgrade.setGraphic(buttonTextCursor);
+
+
+        Text cursorValue = new Text(String.valueOf(myCursor.getPrice()));
+        cursorValue.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        cursorValue.setFill(Color.BLACK);
+
+        vbox.getChildren().addAll(buttonTextCursor, cursorValue);
+        vbox.setAlignment(Pos.CENTER_LEFT);
+        vbox.setPadding(new Insets(0, 0, 0, 10));
+
+        firstUpgrade.setGraphic(vbox);
 
         firstUpgrade.setLayoutX(830);
         firstUpgrade.setLayoutY(400);
 
         firstUpgrade.setOnMousePressed(event -> firstUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
 
-        // Zmiana stylu po puszczeniu przycisku
         firstUpgrade.setOnMouseReleased(event -> firstUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
-
 
         firstUpgrade.setOnMouseEntered(event -> {
             firstUpgrade.setCursor(Cursor.HAND);
@@ -337,18 +494,16 @@ public class HelloApplication extends Application {
         firstUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if(myCursor.isAvailableToBuy(counterCoins)){
+                if (myCursor.isAvailableToBuy(counterCoins)) {
                     counterCoins -= myCursor.buyCursor();
-                }else{
+                } else {
                     playTextAnimation();
                 }
-                counterText.setText(counterCoins.toString());
-                perClickText.setText(counterPerClick.toString());
-                perSecondText.setText(counterPerSecond.toString());
+                upgrade();
+                cursorValue.setText(String.valueOf(myCursor.getPrice()));
             }
         });
 
-        // drugi
 
         secondUpgrade = new Button();
         secondUpgrade.setPrefWidth(350);
@@ -359,16 +514,24 @@ public class HelloApplication extends Application {
         Text buttonTextDogeCoin = new Text("Dogecoin");
         buttonTextDogeCoin.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         buttonTextDogeCoin.setFill(Color.BLACK);
-        secondUpgrade.setGraphic(buttonTextDogeCoin);
+
+        Text dogeCoinValue = new Text(String.valueOf(dogeCoin.getPrice()));
+        dogeCoinValue.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        dogeCoinValue.setFill(Color.BLACK);
+
+        VBox vbox2 = new VBox(5);
+        vbox2.getChildren().addAll(buttonTextDogeCoin, dogeCoinValue);
+        vbox2.setAlignment(Pos.CENTER_LEFT);
+        vbox2.setPadding(new Insets(0, 0, 0, 10));
+
+        secondUpgrade.setGraphic(vbox2);
 
         secondUpgrade.setLayoutX(830);
         secondUpgrade.setLayoutY(500);
 
         secondUpgrade.setOnMousePressed(event -> secondUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
 
-        // Zmiana stylu po puszczeniu przycisku
         secondUpgrade.setOnMouseReleased(event -> secondUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
-
 
         secondUpgrade.setOnMouseEntered(event -> {
             secondUpgrade.setCursor(Cursor.HAND);
@@ -378,21 +541,22 @@ public class HelloApplication extends Application {
             secondUpgrade.setCursor(Cursor.DEFAULT);
         });
 
+
         secondUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if(dogeCoin.isAvailableToBuy(counterCoins)){
+                if (dogeCoin.isAvailableToBuy(counterCoins)) {
                     counterCoins -= dogeCoin.buyCrypto();
-                }else{
+                } else {
                     playTextAnimation();
                 }
-                counterText.setText(counterCoins.toString());
-                perClickText.setText(counterPerClick.toString());
-                perSecondText.setText(counterPerSecond.toString());
+
+                counterPerSecond = ethereum.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + dogeCoin.getCoinsPerSecond();
+                upgrade();
+                dogeCoinValue.setText(String.valueOf(dogeCoin.getPrice()));
             }
         });
 
-        // trzeci
 
         thirdUpgrade = new Button();
         thirdUpgrade.setPrefWidth(350);
@@ -403,16 +567,24 @@ public class HelloApplication extends Application {
         Text buttonTextEthereum = new Text("Ethereum");
         buttonTextEthereum.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         buttonTextEthereum.setFill(Color.BLACK);
-        thirdUpgrade.setGraphic(buttonTextEthereum);
+
+        Text etherumValue = new Text(String.valueOf(ethereum.getPrice()));
+        etherumValue.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        etherumValue.setFill(Color.BLACK);
+
+        VBox vbox3 = new VBox(5);
+        vbox3.getChildren().addAll(buttonTextEthereum, etherumValue);
+        vbox3.setAlignment(Pos.CENTER_LEFT);
+        vbox3.setPadding(new Insets(0, 0, 0, 10));
+
+        thirdUpgrade.setGraphic(vbox3);
 
         thirdUpgrade.setLayoutX(830);
         thirdUpgrade.setLayoutY(600);
 
         thirdUpgrade.setOnMousePressed(event -> thirdUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
 
-        // Zmiana stylu po puszczeniu przycisku
         thirdUpgrade.setOnMouseReleased(event -> thirdUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
-
 
         thirdUpgrade.setOnMouseEntered(event -> {
             thirdUpgrade.setCursor(Cursor.HAND);
@@ -425,18 +597,17 @@ public class HelloApplication extends Application {
         thirdUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if(ethereum.isAvailableToBuy(counterCoins)){
+                if (ethereum.isAvailableToBuy(counterCoins)) {
                     counterCoins -= ethereum.buyCrypto();
-                }else{
+                } else {
                     playTextAnimation();
                 }
-                counterText.setText(counterCoins.toString());
-                perClickText.setText(counterPerClick.toString());
-                perSecondText.setText(counterPerSecond.toString());
+                counterPerSecond = ethereum.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + dogeCoin.getCoinsPerSecond();
+                upgrade();
+                etherumValue.setText(String.valueOf(ethereum.getPrice()));
             }
         });
 
-        // czwarty
 
         fourthUpgrade = new Button();
         fourthUpgrade.setPrefWidth(350);
@@ -447,16 +618,24 @@ public class HelloApplication extends Application {
         Text buttonTextBitcoin = new Text("Bitcoin");
         buttonTextBitcoin.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         buttonTextBitcoin.setFill(Color.BLACK);
-        fourthUpgrade.setGraphic(buttonTextBitcoin);
+
+        Text bitcoinValue = new Text(String.valueOf(bitcoin.getPrice()));
+        bitcoinValue.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        bitcoinValue.setFill(Color.BLACK);
+
+        VBox vbox4 = new VBox(5);
+        vbox4.getChildren().addAll(buttonTextBitcoin, bitcoinValue);
+        vbox4.setAlignment(Pos.CENTER_LEFT);
+        vbox4.setPadding(new Insets(0, 0, 0, 10));
+
+        fourthUpgrade.setGraphic(vbox4);
 
         fourthUpgrade.setLayoutX(830);
         fourthUpgrade.setLayoutY(700);
 
         fourthUpgrade.setOnMousePressed(event -> fourthUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
 
-        // Zmiana stylu po puszczeniu przycisku
         fourthUpgrade.setOnMouseReleased(event -> fourthUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
-
 
         fourthUpgrade.setOnMouseEntered(event -> {
             fourthUpgrade.setCursor(Cursor.HAND);
@@ -469,22 +648,37 @@ public class HelloApplication extends Application {
         fourthUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if(bitcoin.isAvailableToBuy(counterCoins)){
+                if (bitcoin.isAvailableToBuy(counterCoins)) {
                     counterCoins -= bitcoin.buyCrypto();
-                }else{
+                } else {
                     playTextAnimation();
                 }
-                counterText.setText(counterCoins.toString());
-                perClickText.setText(counterPerClick.toString());
-                perSecondText.setText(counterPerSecond.toString());
+                counterPerSecond = ethereum.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + dogeCoin.getCoinsPerSecond();
+                upgrade();
+                bitcoinValue.setText(String.valueOf(bitcoin.getPrice()));
             }
         });
-
 
         mainPane.getChildren().add(firstUpgrade);
         mainPane.getChildren().add(secondUpgrade);
         mainPane.getChildren().add(thirdUpgrade);
         mainPane.getChildren().add(fourthUpgrade);
+    }
+
+    private void updateLeaderboard(String message){
+        if(message != null) {
+            String[] players = message.split("/");
+            var df = new DecimalFormat("#.##");
+
+            for (int i = 0; i < players.length; ++i) {
+                String[] playerStat = players[i].split(":");
+                nicknames[i].setText(playerStat[0]);
+                usersCoins[i].setText(playerStat[1]);
+                Double score = Double.valueOf(playerStat[1]);
+                usersCoins[i].setText(df.format(score));
+                usersCoins[i].setTextAlignment(TextAlignment.RIGHT);
+            }
+        }
     }
 
     private void playTextAnimation() {
@@ -511,9 +705,5 @@ public class HelloApplication extends Application {
         transition.play();
 
         mainPane.getChildren().add(text);
-    }
-
-    private void addToScorePerClick() {
-
     }
 }
