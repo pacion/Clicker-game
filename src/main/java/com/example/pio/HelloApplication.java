@@ -99,7 +99,10 @@ public class HelloApplication extends Application {
 
         primaryStage.setScene(scene);
         primaryStage.show();
+
+
     }
+
 
     public void createScreen() {
         mainPane = new Pane();
@@ -305,6 +308,16 @@ public class HelloApplication extends Application {
     public void turnOnTimer() {
         Timeline timeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), event -> {
+                    var df = new DecimalFormat("#.##");
+
+                    counterCoins += dogeCoin.getCoinsPerSecond();
+                    counterCoins += bitcoin.getCoinsPerSecond();
+                    counterCoins += ethereum.getCoinsPerSecond();
+                    counterText.setText(counterCoins.toString());
+                    counterText.setText(df.format(counterCoins));
+                    perClickText.setText(counterPerClick.toString());
+                    perSecondText.setText(counterPerSecond.toString());
+
                     secondsElapsed++;
                     timerText.setText("Time in seconds: " + secondsElapsed);
                 })

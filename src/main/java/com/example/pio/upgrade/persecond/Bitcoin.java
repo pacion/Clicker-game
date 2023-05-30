@@ -5,7 +5,7 @@ public class Bitcoin extends UpgradePerSecond implements Cryptocurrency {
     public Bitcoin() {
         setPrice(200);
         setAmount(0);
-        setCoinsPerSecond(1);
+        setCoinsPerSecond(1.4);
     }
 
     @Override
@@ -15,10 +15,10 @@ public class Bitcoin extends UpgradePerSecond implements Cryptocurrency {
 
     @Override
     public double buyCrypto() {
-        setCoinsPerSecond(getCoinsPerSecond() + 1);
+        setCoinsPerSecond(getCoinsPerSecond() + getCoinsPerSecond() * 10 / 100);
         setAmount(getAmount() + 1);
         var toReturn = getPrice();
-        setPrice(getPrice() * 2);
+        setPrice(getPrice() + (int)getCoinsPerSecond() * 95 / getAmount());
         return toReturn;
     }
 }
