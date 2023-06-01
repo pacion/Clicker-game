@@ -92,69 +92,75 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("Crypto clicker");
+        try {
+            primaryStage.setTitle("Crypto clicker");
+            primaryStage.setResizable(false);
 
-        createScreen(primaryStage);
+            createScreen(primaryStage);
 
-        setImageButton();
+            setImageButton();
 
-        createCounters();
+            createCounters();
 
-        setCounters();
+            setCounters();
 
-        createTexts();
+            createTexts();
 
-        turnOnTimer();
+            turnOnTimer();
 
-        createRectangles();
+            createRectangles();
 
-        primaryStage.setScene(scene);
-        primaryStage.show();
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Nickname");
-        dialog.setHeaderText(null);
-        dialog.setContentText("Please enter your nickname:");
+            primaryStage.setScene(scene);
+            primaryStage.show();
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Nickname");
+            dialog.setHeaderText(null);
+            dialog.setContentText("Please enter your nickname:");
 
-        Optional<String> result = dialog.showAndWait();
-        if (result.isPresent()) {
-            nickname = result.get();
+            Optional<String> result = dialog.showAndWait();
+            if (result.isPresent()) {
+                nickname = result.get();
+            }
+
+            final String finalNickname = nickname;
+
+            showUser();
+
+            Thread socketThread = new Thread(() -> {
+                try {
+                    Socket socket = new Socket("172.20.10.2", 8080);
+
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+
+                    int i = 0;
+                    while (true) {
+                        writer.println(counterCoins + ":" + nickname + ":" + socket.getLocalAddress().getHostAddress());
+
+                        if (i == 1000000)
+                            break;
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        updateLeaderboard(reader.readLine());
+                    }
+
+                    socket.close();
+                    reader.close();
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            socketThread.start();
+        }
+        catch(Exception e) {
+
         }
 
-        final String finalNickname = nickname;
-
-        showUser();
-
-        Thread socketThread = new Thread(() -> {
-            try {
-                Socket socket = new Socket("10.77.21.241", 8080);
-
-                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-
-                int i=0;
-                while(true) {
-                     writer.println(counterCoins + ":" + nickname + ":" + socket.getLocalAddress().getHostAddress());
-
-                    if(i == 1000000)
-                       break;
-                    try {
-                        Thread.sleep(300);
-                    }
-                    catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    updateLeaderboard(reader.readLine());
-                }
-
-                socket.close();
-                reader.close();
-                writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-
-        socketThread.start();
     }
     private static Map<String, Integer> parseMap(String mapString) {
         Map<String, Integer> map = new HashMap<>();
@@ -194,7 +200,7 @@ public class HelloApplication extends Application {
 
         mainPane.getChildren().add(root);
 
-        Color backgroundColor2 = Color.GREEN;
+        Color backgroundColor2 = Color.LAVENDER;
         double backgroundWidth2 = scene.getWidth() / 3.0;
         BackgroundFill backgroundFill2 = new BackgroundFill(backgroundColor2, null, null);
         Background background2 = new Background(backgroundFill2);
@@ -428,11 +434,12 @@ public class HelloApplication extends Application {
 
     public void upgrade() {
         var df = new DecimalFormat("#.##");
-        counterText.setText(counterCoins.toString());
-        counterText.setText(df.format(counterCoins));
-        perClickText.setText(counterPerClick.toString());
-        perSecondText.setText(counterPerSecond.toString());
-        perSecondText.setText(df.format(counterPerSecond));
+        //counterText.setText(String.valueOf(counterCoins));
+        counterText.setText(df.format(counterCoins.doubleValue()));
+        //perClickText.setText(String.valueOf(myCursor.getCoinsPerClick()));
+        perSecondText.setText(df.format(counterPerSecond.doubleValue()));
+        perClickText.setText(df.format(myCursor.getCoinsPerClick().doubleValue()));
+       // perSecondText.setText(df.format(String.valueOf(counterPerSecond)));
     }
 
     public void turnOnTimer() {
