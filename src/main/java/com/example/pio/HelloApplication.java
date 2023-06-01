@@ -78,6 +78,7 @@ public class HelloApplication extends Application {
     private Rectangle[] rectangles;
     private Text[] nicknames;
     private Text[] usersCoins;
+    private Text[] userUpgrades;
 
     public HelloApplication() {
         this.bitcoin = new Bitcoin();
@@ -128,7 +129,7 @@ public class HelloApplication extends Application {
 
             Thread socketThread = new Thread(() -> {
                 try {
-                    Socket socket = new Socket("172.20.10.2", 8080);
+                    Socket socket = new Socket("192.168.56.1", 8080);
 
                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
@@ -507,6 +508,7 @@ public class HelloApplication extends Application {
                     playTextAnimation();
                 }
                 upgrade();
+                userUpgrades[0].setText(String.valueOf(myCursor.getAmount()));
                 cursorValue.setText(String.valueOf(myCursor.getPrice()));
             }
         });
@@ -522,7 +524,7 @@ public class HelloApplication extends Application {
         buttonTextDogeCoin.setFill(Color.BLACK);
 
         Text dogeCoinValue = new Text(String.valueOf(dogeCoin.getPrice()));
-        dogeCoinValue.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        dogeCoinValue.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         dogeCoinValue.setFill(Color.BLACK);
 
         VBox vbox2 = new VBox(5);
@@ -558,6 +560,7 @@ public class HelloApplication extends Application {
 
                 counterPerSecond = ethereum.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + dogeCoin.getCoinsPerSecond();
                 upgrade();
+                userUpgrades[1].setText(String.valueOf(dogeCoin.getAmount()));
                 dogeCoinValue.setText(String.valueOf(dogeCoin.getPrice()));
             }
         });
@@ -608,6 +611,7 @@ public class HelloApplication extends Application {
                 }
                 counterPerSecond = ethereum.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + dogeCoin.getCoinsPerSecond();
                 upgrade();
+                userUpgrades[2].setText(String.valueOf(ethereum.getAmount()));
                 etherumValue.setText(String.valueOf(ethereum.getPrice()));
             }
         });
@@ -658,6 +662,7 @@ public class HelloApplication extends Application {
                 }
                 counterPerSecond = ethereum.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + dogeCoin.getCoinsPerSecond();
                 upgrade();
+                userUpgrades[3].setText(String.valueOf(bitcoin.getAmount()));
                 bitcoinValue.setText(String.valueOf(bitcoin.getPrice()));
             }
         });
@@ -666,6 +671,24 @@ public class HelloApplication extends Application {
         mainPane.getChildren().add(secondUpgrade);
         mainPane.getChildren().add(thirdUpgrade);
         mainPane.getChildren().add(fourthUpgrade);
+        createUpgradeAmountText();
+    }
+
+    private void createUpgradeAmountText(){
+        userUpgrades = new Text[4];
+
+        int offset = 100;
+
+        for(int i = 0; i < 4; ++i) {
+            userUpgrades[i] = new Text();
+            userUpgrades[i].setText("0");
+            userUpgrades[i].setFont(Font.font("Arial", FontWeight.EXTRA_LIGHT, 24));
+            userUpgrades[i].setFill(Color.rgb(89, 180, 79));
+            userUpgrades[i].setX(1125);
+            userUpgrades[i].setY(450 + offset * i);
+        }
+
+        mainPane.getChildren().addAll(userUpgrades[0], userUpgrades[1], userUpgrades[2], userUpgrades[3]);
     }
 
     private void updateLeaderboard(String message) {
