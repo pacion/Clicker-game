@@ -5,7 +5,7 @@ public class MyCursor extends UpgradePerClick implements Clicker {
     public MyCursor() {
         setPrice(1);
         setAmount(0);
-        setCoinsPerClick(1);
+        setCoinsPerClick(1D);
     }
 
     @Override

@@ -3,9 +3,9 @@ package com.example.pio.upgrade.persecond;
 import com.example.pio.upgrade.Upgrade;
 
 class UpgradePerSecond extends Upgrade {
-    private double coinsPerSecond;
+    private Double coinsPerSecond;
 
-    public double getCoinsPerSecond() {
+    public Double getCoinsPerSecond() {
         return coinsPerSecond;
     }
 

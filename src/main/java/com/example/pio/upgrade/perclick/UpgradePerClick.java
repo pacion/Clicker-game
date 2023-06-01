@@ -3,13 +3,13 @@ package com.example.pio.upgrade.perclick;
 import com.example.pio.upgrade.Upgrade;
 
 class UpgradePerClick extends Upgrade {
-    private double coinsPerClick;
+    private Double coinsPerClick;
 
-    public double getCoinsPerClick() {
+    public Double getCoinsPerClick() {
         return coinsPerClick;
     }
 
-    public void setCoinsPerClick(double coinsPerClick) {
+    public void setCoinsPerClick(Double coinsPerClick) {
         this.coinsPerClick = coinsPerClick;
     }
 }
