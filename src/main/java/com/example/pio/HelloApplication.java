@@ -162,6 +162,7 @@ public class HelloApplication extends Application {
         }
 
     }
+
     private static Map<String, Integer> parseMap(String mapString) {
         Map<String, Integer> map = new HashMap<>();
 
@@ -188,7 +189,7 @@ public class HelloApplication extends Application {
         mainPane = new Pane();
         scene = new Scene(mainPane, 1200, 800);
 
-        Color backgroundColor = Color.rgb(56,36,36);
+        Color backgroundColor = Color.rgb(71,25,171);
         double backgroundWidth = scene.getWidth() / 3.0;
         BackgroundFill backgroundFill = new BackgroundFill(backgroundColor, null, null);
         Background background = new Background(backgroundFill);
@@ -217,7 +218,7 @@ public class HelloApplication extends Application {
 
         mainPane.getChildren().add(pane2);
 
-        Color backgroundColor3 = Color.rgb(26, 99, 136, 1.0);
+        Color backgroundColor3 = Color.GOLDENROD;
         double backgroundWidth3 = scene.getWidth() / 3.0;
         BackgroundFill backgroundFill3 = new BackgroundFill(backgroundColor3, null, null);
         Background background3 = new Background(backgroundFill3);
@@ -240,7 +241,7 @@ public class HelloApplication extends Application {
         rectangles[0] = createRectangle(Color.GOLD, 30);
         rectangles[1] = createRectangle(Color.SILVER, 110);
         rectangles[2] = createRectangle(Color.BROWN, 190);
-        rectangles[3] = createRectangle(Color.BLACK, 270);
+        rectangles[3] = createRectangle(Color.TAN, 270);
 
         mainPane.getChildren().addAll(rectangles);
         mainPane.getChildren().addAll(nicknames);
@@ -263,14 +264,14 @@ public class HelloApplication extends Application {
         for(int i = 0; i < 4; i++){
             nicknames[i] = new Text();
             nicknames[i].setText("-----");
-            nicknames[i].setFont(Font.font("Arial", FontWeight.BOLD, 24));
-            nicknames[i].setFill(Color.rgb(140, 20, 122));
+            nicknames[i].setFont(Font.font("Arial", FontWeight.THIN, 24));
+            nicknames[i].setFill(Color.rgb(140, 20, 199));
             nicknames[i].setX(850);
             nicknames[i].setY(70 + offset * i);
             usersCoins[i] = new Text();
             usersCoins[i].setText("0");
-            usersCoins[i].setFont(Font.font("Arial", FontWeight.BOLD, 24));
-            usersCoins[i].setFill(Color.rgb(241, 20, 122));
+            usersCoins[i].setFont(Font.font("Arial", FontWeight.EXTRA_LIGHT, 24));
+            usersCoins[i].setFill(Color.rgb(89, 180, 79));
             usersCoins[i].setX(1025);
             usersCoins[i].setY(70 + offset * i);
         }
@@ -328,8 +329,8 @@ public class HelloApplication extends Application {
     public void createCounters() {
         DropShadow dropShadow = new DropShadow();
         dropShadow.setColor(Color.PURPLE);
-        dropShadow.setRadius(10);
-        dropShadow.setSpread(0.6);
+        dropShadow.setRadius(20);
+        dropShadow.setSpread(0.8);
         dropShadow.setOffsetX(0);
         dropShadow.setOffsetY(0);
 
@@ -472,7 +473,6 @@ public class HelloApplication extends Application {
         buttonTextCursor.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         buttonTextCursor.setFill(Color.BLACK);
 
-
         Text cursorValue = new Text(String.valueOf(myCursor.getPrice()));
         cursorValue.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         cursorValue.setFill(Color.BLACK);
@@ -511,7 +511,6 @@ public class HelloApplication extends Application {
             }
         });
 
-
         secondUpgrade = new Button();
         secondUpgrade.setPrefWidth(350);
         secondUpgrade.setPrefHeight(80);
@@ -523,7 +522,7 @@ public class HelloApplication extends Application {
         buttonTextDogeCoin.setFill(Color.BLACK);
 
         Text dogeCoinValue = new Text(String.valueOf(dogeCoin.getPrice()));
-        dogeCoinValue.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        dogeCoinValue.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         dogeCoinValue.setFill(Color.BLACK);
 
         VBox vbox2 = new VBox(5);
@@ -548,7 +547,6 @@ public class HelloApplication extends Application {
             secondUpgrade.setCursor(Cursor.DEFAULT);
         });
 
-
         secondUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -564,12 +562,11 @@ public class HelloApplication extends Application {
             }
         });
 
-
         thirdUpgrade = new Button();
         thirdUpgrade.setPrefWidth(350);
         thirdUpgrade.setPrefHeight(80);
 
-        thirdUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+        thirdUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 14;");
 
         Text buttonTextEthereum = new Text("Ethereum");
         buttonTextEthereum.setFont(Font.font("Arial", FontWeight.BOLD, 24));
@@ -614,7 +611,6 @@ public class HelloApplication extends Application {
                 etherumValue.setText(String.valueOf(ethereum.getPrice()));
             }
         });
-
 
         fourthUpgrade = new Button();
         fourthUpgrade.setPrefWidth(350);
@@ -672,21 +668,26 @@ public class HelloApplication extends Application {
         mainPane.getChildren().add(fourthUpgrade);
     }
 
-    private void updateLeaderboard(String message){
-        if(message != null) {
+    private void updateLeaderboard(String message) {
+        if (message != null) {
             String[] players = message.split("/");
-            var df = new DecimalFormat("#.##");
+            DecimalFormat df = new DecimalFormat("#.##");
 
-            for (int i = 0; i < players.length; ++i) {
+            for (int i = 0; i < players.length; i++) {
                 String[] playerStat = players[i].split(":");
-                nicknames[i].setText(playerStat[0]);
-                usersCoins[i].setText(playerStat[1]);
-                Double score = Double.valueOf(playerStat[1]);
-                usersCoins[i].setText(df.format(score));
+                String nickname = playerStat[0];
+                String coins = playerStat[1];
+
+                nicknames[i].setText(nickname);
+
+                double score = Double.parseDouble(coins);
+                String formattedScore = df.format(score);
+                usersCoins[i].setText(formattedScore);
                 usersCoins[i].setTextAlignment(TextAlignment.RIGHT);
             }
         }
     }
+
 
     private void playTextAnimation() {
         Text text = new Text("Not enough money");
@@ -713,4 +714,6 @@ public class HelloApplication extends Application {
 
         mainPane.getChildren().add(text);
     }
+
+
 }
