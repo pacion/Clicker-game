@@ -36,8 +36,6 @@ import java.net.Socket;
 import java.text.DecimalFormat;
 import java.util.*;
 
-import static java.lang.System.in;
-
 public class HelloApplication extends Application {
 
     private Pane mainPane;
@@ -55,7 +53,8 @@ public class HelloApplication extends Application {
 
     private Text coins;
     private Text counterText;
-    private Double counterCoins = 0D;
+    private Double currentCoins = 0D;
+    private Double allCoins = 0D;
 
     private Text perClick;
     private Text perClickText;
@@ -136,7 +135,7 @@ public class HelloApplication extends Application {
 
                     int i = 0;
                     while (true) {
-                        writer.println(counterCoins + ":" + nickname + ":" + socket.getLocalAddress().getHostAddress());
+                        writer.println(allCoins + ":" + nickname + ":" + socket.getLocalAddress().getHostAddress());
 
                         if (i == 1000000)
                             break;
@@ -314,7 +313,8 @@ public class HelloApplication extends Application {
         imageButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                counterCoins += myCursor.getCoinsPerClick();
+                currentCoins += myCursor.getCoinsPerClick();
+                allCoins += myCursor.getCoinsPerClick();
                 upgrade();
                 scaleInTransition.setOnFinished(e -> scaleOutTransition.play());
                 scaleInTransition.play();
@@ -437,7 +437,7 @@ public class HelloApplication extends Application {
     public void upgrade() {
         var df = new DecimalFormat("#.##");
         //counterText.setText(String.valueOf(counterCoins));
-        counterText.setText(df.format(counterCoins.doubleValue()));
+        counterText.setText(df.format(currentCoins.doubleValue()));
         //perClickText.setText(String.valueOf(myCursor.getCoinsPerClick()));
         perSecondText.setText(df.format(counterPerSecond.doubleValue()));
         perClickText.setText(df.format(myCursor.getCoinsPerClick().doubleValue()));
@@ -448,9 +448,9 @@ public class HelloApplication extends Application {
         Timeline timeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), event -> {
                     upgrade();
-                    counterCoins += dogeCoin.getCoinsPerSecond();
-                    counterCoins += bitcoin.getCoinsPerSecond();
-                    counterCoins += ethereum.getCoinsPerSecond();
+                    Double coinsToAdd = dogeCoin.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + ethereum.getCoinsPerSecond();
+                    currentCoins += coinsToAdd;
+                    allCoins += coinsToAdd;
                     secondsElapsed++;
                     timerText.setText("Time in seconds: " + secondsElapsed);
                 }));
@@ -502,8 +502,8 @@ public class HelloApplication extends Application {
         firstUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if (myCursor.isAvailableToBuy(counterCoins)) {
-                    counterCoins -= myCursor.buyCursor();
+                if (myCursor.isAvailableToBuy(currentCoins)) {
+                    currentCoins -= myCursor.buyCursor();
                 } else {
                     playTextAnimation();
                 }
@@ -552,8 +552,8 @@ public class HelloApplication extends Application {
         secondUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if (dogeCoin.isAvailableToBuy(counterCoins)) {
-                    counterCoins -= dogeCoin.buyCrypto();
+                if (dogeCoin.isAvailableToBuy(currentCoins)) {
+                    currentCoins -= dogeCoin.buyCrypto();
                 } else {
                     playTextAnimation();
                 }
@@ -604,8 +604,8 @@ public class HelloApplication extends Application {
         thirdUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if (ethereum.isAvailableToBuy(counterCoins)) {
-                    counterCoins -= ethereum.buyCrypto();
+                if (ethereum.isAvailableToBuy(currentCoins)) {
+                    currentCoins -= ethereum.buyCrypto();
                 } else {
                     playTextAnimation();
                 }
@@ -655,8 +655,8 @@ public class HelloApplication extends Application {
         fourthUpgrade.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if (bitcoin.isAvailableToBuy(counterCoins)) {
-                    counterCoins -= bitcoin.buyCrypto();
+                if (bitcoin.isAvailableToBuy(currentCoins)) {
+                    currentCoins -= bitcoin.buyCrypto();
                 } else {
                     playTextAnimation();
                 }
