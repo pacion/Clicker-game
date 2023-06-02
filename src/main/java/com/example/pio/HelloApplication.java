@@ -436,12 +436,9 @@ public class HelloApplication extends Application {
 
     public void upgrade() {
         var df = new DecimalFormat("#.##");
-        //counterText.setText(String.valueOf(counterCoins));
         counterText.setText(df.format(currentCoins.doubleValue()));
-        //perClickText.setText(String.valueOf(myCursor.getCoinsPerClick()));
         perSecondText.setText(df.format(counterPerSecond.doubleValue()));
         perClickText.setText(df.format(myCursor.getCoinsPerClick().doubleValue()));
-       // perSecondText.setText(df.format(String.valueOf(counterPerSecond)));
     }
 
     public void turnOnTimer() {
