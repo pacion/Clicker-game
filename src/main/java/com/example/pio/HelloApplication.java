@@ -6,8 +6,6 @@ import com.example.pio.upgrade.persecond.DogeCoin;
 import com.example.pio.upgrade.persecond.Ethereum;
 import javafx.animation.*;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -34,7 +32,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public class HelloApplication extends Application {
 
@@ -49,11 +49,11 @@ public class HelloApplication extends Application {
     private BorderPane root;
     private Text timerText;
     private long secondsElapsed = 0;
-    private boolean isAnimationRunning = false;
 
     private Text coins;
     private Text counterText;
     private Double currentCoins = 0D;
+    private Double counterCoins = 0D;
     private Double allCoins = 0D;
 
     private Text perClick;
@@ -63,10 +63,6 @@ public class HelloApplication extends Application {
     private Text perSecond;
     private Text perSecondText;
     private Double counterPerSecond = 0D;
-
-    private Text cursor;
-    private Text cursorText;
-    private Double counterCursor = 0D;
 
     private final MyCursor myCursor;
     private final Bitcoin bitcoin;
@@ -156,8 +152,7 @@ public class HelloApplication extends Application {
             });
 
             socketThread.start();
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
 
         }
 
@@ -189,7 +184,7 @@ public class HelloApplication extends Application {
         mainPane = new Pane();
         scene = new Scene(mainPane, 1200, 800);
 
-        Color backgroundColor = Color.rgb(71,25,171);
+        Color backgroundColor = Color.rgb(71, 25, 171);
         double backgroundWidth = scene.getWidth() / 3.0;
         BackgroundFill backgroundFill = new BackgroundFill(backgroundColor, null, null);
         Background background = new Background(backgroundFill);
@@ -261,7 +256,7 @@ public class HelloApplication extends Application {
 
         int offset = 80;
 
-        for(int i = 0; i < 4; i++){
+        for (int i = 0; i < 4; i++) {
             nicknames[i] = new Text();
             nicknames[i].setText("-----");
             nicknames[i].setFont(Font.font("Arial", FontWeight.THIN, 24));
@@ -310,19 +305,19 @@ public class HelloApplication extends Application {
         scaleOutTransition.setToX(1.0);
         scaleOutTransition.setToY(1.0);
 
-        imageButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                currentCoins += myCursor.getCoinsPerClick();
-                allCoins += myCursor.getCoinsPerClick();
-                upgrade();
-                scaleInTransition.setOnFinished(e -> scaleOutTransition.play());
-                scaleInTransition.play();
-            }
+        imageButton.setOnAction(event -> {
+            counterCoins += myCursor.getCoinsPerClick();
+            counterText.setText(counterCoins.toString());
+            perClickText.setText(counterPerClick.toString());
+            perSecondText.setText(counterPerSecond.toString());
+            scaleInTransition.setOnFinished(e -> scaleOutTransition.play());
+            scaleInTransition.play();
         });
 
         Pane pane = new Pane();
-        pane.getChildren().add(imageButton);
+        pane.getChildren().
+
+                add(imageButton);
 
         root.setCenter(pane);
     }
@@ -484,30 +479,17 @@ public class HelloApplication extends Application {
         firstUpgrade.setLayoutX(830);
         firstUpgrade.setLayoutY(400);
 
-        firstUpgrade.setOnMousePressed(event -> firstUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+        doSomethingWithButton(firstUpgrade);
 
-        firstUpgrade.setOnMouseReleased(event -> firstUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
-
-        firstUpgrade.setOnMouseEntered(event -> {
-            firstUpgrade.setCursor(Cursor.HAND);
-        });
-
-        firstUpgrade.setOnMouseExited(event -> {
-            firstUpgrade.setCursor(Cursor.DEFAULT);
-        });
-
-        firstUpgrade.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (myCursor.isAvailableToBuy(currentCoins)) {
-                    currentCoins -= myCursor.buyCursor();
-                } else {
-                    playTextAnimation();
-                }
-                upgrade();
-                userUpgrades[0].setText(String.valueOf(myCursor.getAmount()));
-                cursorValue.setText(String.valueOf(myCursor.getPrice()));
+        firstUpgrade.setOnAction(event -> {
+            if (myCursor.isAvailableToBuy(counterCoins)) {
+                counterCoins -= myCursor.buyCursor();
+            } else {
+                playTextAnimation();
             }
+            counterText.setText(counterCoins.toString());
+            perClickText.setText(counterPerClick.toString());
+            perSecondText.setText(counterPerSecond.toString());
         });
 
         secondUpgrade = new Button();
@@ -534,32 +516,17 @@ public class HelloApplication extends Application {
         secondUpgrade.setLayoutX(830);
         secondUpgrade.setLayoutY(500);
 
-        secondUpgrade.setOnMousePressed(event -> secondUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+        doSomethingWithButton(secondUpgrade);
 
-        secondUpgrade.setOnMouseReleased(event -> secondUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
-
-        secondUpgrade.setOnMouseEntered(event -> {
-            secondUpgrade.setCursor(Cursor.HAND);
-        });
-
-        secondUpgrade.setOnMouseExited(event -> {
-            secondUpgrade.setCursor(Cursor.DEFAULT);
-        });
-
-        secondUpgrade.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (dogeCoin.isAvailableToBuy(currentCoins)) {
-                    currentCoins -= dogeCoin.buyCrypto();
-                } else {
-                    playTextAnimation();
-                }
-
-                counterPerSecond = ethereum.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + dogeCoin.getCoinsPerSecond();
-                upgrade();
-                userUpgrades[1].setText(String.valueOf(dogeCoin.getAmount()));
-                dogeCoinValue.setText(String.valueOf(dogeCoin.getPrice()));
+        secondUpgrade.setOnAction(event -> {
+            if (dogeCoin.isAvailableToBuy(counterCoins)) {
+                counterCoins -= dogeCoin.buyCrypto();
+            } else {
+                playTextAnimation();
             }
+            counterText.setText(counterCoins.toString());
+            perClickText.setText(counterPerClick.toString());
+            perSecondText.setText(counterPerSecond.toString());
         });
 
         thirdUpgrade = new Button();
@@ -586,31 +553,17 @@ public class HelloApplication extends Application {
         thirdUpgrade.setLayoutX(830);
         thirdUpgrade.setLayoutY(600);
 
-        thirdUpgrade.setOnMousePressed(event -> thirdUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+        doSomethingWithButton(thirdUpgrade);
 
-        thirdUpgrade.setOnMouseReleased(event -> thirdUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
-
-        thirdUpgrade.setOnMouseEntered(event -> {
-            thirdUpgrade.setCursor(Cursor.HAND);
-        });
-
-        thirdUpgrade.setOnMouseExited(event -> {
-            thirdUpgrade.setCursor(Cursor.DEFAULT);
-        });
-
-        thirdUpgrade.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (ethereum.isAvailableToBuy(currentCoins)) {
-                    currentCoins -= ethereum.buyCrypto();
-                } else {
-                    playTextAnimation();
-                }
-                counterPerSecond = ethereum.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + dogeCoin.getCoinsPerSecond();
-                upgrade();
-                userUpgrades[2].setText(String.valueOf(ethereum.getAmount()));
-                etherumValue.setText(String.valueOf(ethereum.getPrice()));
+        thirdUpgrade.setOnAction(event -> {
+            if (ethereum.isAvailableToBuy(counterCoins)) {
+                counterCoins -= ethereum.buyCrypto();
+            } else {
+                playTextAnimation();
             }
+            counterText.setText(counterCoins.toString());
+            perClickText.setText(counterPerClick.toString());
+            perSecondText.setText(counterPerSecond.toString());
         });
 
         fourthUpgrade = new Button();
@@ -637,31 +590,17 @@ public class HelloApplication extends Application {
         fourthUpgrade.setLayoutX(830);
         fourthUpgrade.setLayoutY(700);
 
-        fourthUpgrade.setOnMousePressed(event -> fourthUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+        doSomethingWithButton(fourthUpgrade);
 
-        fourthUpgrade.setOnMouseReleased(event -> fourthUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
-
-        fourthUpgrade.setOnMouseEntered(event -> {
-            fourthUpgrade.setCursor(Cursor.HAND);
-        });
-
-        fourthUpgrade.setOnMouseExited(event -> {
-            fourthUpgrade.setCursor(Cursor.DEFAULT);
-        });
-
-        fourthUpgrade.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (bitcoin.isAvailableToBuy(currentCoins)) {
-                    currentCoins -= bitcoin.buyCrypto();
-                } else {
-                    playTextAnimation();
-                }
-                counterPerSecond = ethereum.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + dogeCoin.getCoinsPerSecond();
-                upgrade();
-                userUpgrades[3].setText(String.valueOf(bitcoin.getAmount()));
-                bitcoinValue.setText(String.valueOf(bitcoin.getPrice()));
+        fourthUpgrade.setOnAction(event -> {
+            if (bitcoin.isAvailableToBuy(counterCoins)) {
+                counterCoins -= bitcoin.buyCrypto();
+            } else {
+                playTextAnimation();
             }
+            counterText.setText(counterCoins.toString());
+            perClickText.setText(counterPerClick.toString());
+            perSecondText.setText(counterPerSecond.toString());
         });
 
         mainPane.getChildren().add(firstUpgrade);
@@ -671,12 +610,12 @@ public class HelloApplication extends Application {
         createUpgradeAmountText();
     }
 
-    private void createUpgradeAmountText(){
+    private void createUpgradeAmountText() {
         userUpgrades = new Text[4];
 
         int offset = 100;
 
-        for(int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 4; ++i) {
             userUpgrades[i] = new Text();
             userUpgrades[i].setText("0");
             userUpgrades[i].setFont(Font.font("Arial", FontWeight.EXTRA_LIGHT, 24));
@@ -687,6 +626,7 @@ public class HelloApplication extends Application {
 
         mainPane.getChildren().addAll(userUpgrades[0], userUpgrades[1], userUpgrades[2], userUpgrades[3]);
     }
+
 
     private void updateLeaderboard(String message) {
         if (message != null) {
@@ -708,6 +648,16 @@ public class HelloApplication extends Application {
         }
     }
 
+    private void doSomethingWithButton(Button firstUpgrade) {
+        firstUpgrade.setOnMousePressed(event -> firstUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+
+        firstUpgrade.setOnMouseReleased(event -> firstUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+
+
+        firstUpgrade.setOnMouseEntered(event -> firstUpgrade.setCursor(Cursor.HAND));
+
+        firstUpgrade.setOnMouseExited(event -> firstUpgrade.setCursor(Cursor.DEFAULT));
+    }
 
     private void playTextAnimation() {
         Text text = new Text("Not enough money");
@@ -723,17 +673,10 @@ public class HelloApplication extends Application {
         fadeTransition.setFromValue(1.0);
         fadeTransition.setToValue(0.0);
 
-        transition.setOnFinished(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                fadeTransition.play();
-            }
-        });
+        transition.setOnFinished(event -> fadeTransition.play());
 
         transition.play();
 
         mainPane.getChildren().add(text);
     }
-
-
 }
