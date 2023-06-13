@@ -3,7 +3,7 @@ package com.example.pio;
 import java.io.Serializable;
 import java.util.*;
 
-class Leaderboard implements Serializable{
+class Leaderboard implements Serializable {
 
     private Map<String, Statistic> playerScores = new HashMap<>();
 
@@ -11,20 +11,10 @@ class Leaderboard implements Serializable{
         playerScores.put(key, new Statistic(value, nickname));
     }
 
-    public Map<String, Statistic> getPlayerScores() {
-        sortMapByScore();
-        return playerScores;
-    }
-
     private void sortMapByScore() {
         List<String> keys = new ArrayList<>(playerScores.keySet());
 
-        Collections.sort(keys, new Comparator<String>() {
-            @Override
-            public int compare(String key1, String key2) {
-                return Double.compare(playerScores.get(key2).score, playerScores.get(key1).score);
-            }
-        });
+        Collections.sort(keys, (key1, key2) -> Double.compare(playerScores.get(key2).score, playerScores.get(key1).score));
 
         LinkedHashMap<String, Statistic> sortedMap = new LinkedHashMap<>();
         for (String key : keys) {
