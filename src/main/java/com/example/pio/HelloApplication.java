@@ -9,15 +9,18 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Effect;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -33,8 +36,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 public class HelloApplication extends Application {
@@ -96,59 +97,23 @@ public class HelloApplication extends Application {
             primaryStage.setResizable(false);
 
             createScreen(primaryStage);
-
             setImageButton();
-
             createCounters();
-
             setCounters();
-
             createTexts();
-
             turnOnTimer();
-
             createRectangles();
 
             primaryStage.setScene(scene);
             primaryStage.show();
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("Nickname");
-            dialog.setHeaderText(null);
-            dialog.setContentText("Please enter your nickname:");
 
-            Optional<String> result = dialog.showAndWait();
-            if (result.isPresent()) {
-                nickname = result.get();
-            }
-
-            final String finalNickname = nickname;
+            nickname = getUserNickname();
 
             showUser();
 
             Thread socketThread = new Thread(() -> {
                 try {
-                    Socket socket = new Socket(IP_HOST, 8080);
-
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-
-                    int i = 0;
-                    while (true) {
-                        writer.println(allCoins + ":" + nickname + ":" + socket.getLocalAddress().getHostAddress());
-
-                        if (i == 1000000)
-                            break;
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                        updateLeaderboard(reader.readLine());
-                    }
-
-                    socket.close();
-                    reader.close();
-                    writer.close();
+                    connectAndSendData(nickname);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -156,84 +121,116 @@ public class HelloApplication extends Application {
 
             socketThread.start();
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
-
     }
 
-    private static Map<String, Integer> parseMap(String mapString) {
-        Map<String, Integer> map = new HashMap<>();
+    private String getUserNickname() {
+        TextInputDialog dialog = createNicknameDialog();
+        Optional<String> result = dialog.showAndWait();
+        return result.orElse("");
+    }
 
-        String cleanedString = mapString.replace("{", "").replace("}", "").trim();
+    private TextInputDialog createNicknameDialog() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Nickname");
+        dialog.setHeaderText(null);
+        dialog.setContentText("Please enter your nickname:");
+        return dialog;
+    }
 
-        if (!cleanedString.isEmpty()) {
-            String[] pairs = cleanedString.split(",");
 
-            for (String pair : pairs) {
-                String[] keyValue = pair.trim().split("=");
+    private void connectAndSendData(String nickname) throws IOException {
+        try (Socket socket = createSocket(IP_HOST, 8080);
+             BufferedReader reader = createReader(socket);
+             PrintWriter writer = createWriter(socket)) {
 
-                if (keyValue.length == 2) {
-                    String key = keyValue[0].trim();
-                    int value = Integer.parseInt(keyValue[1].trim());
-                    map.put(key, value);
+            int i = 0;
+            while (true) {
+                sendData(writer, nickname, socket);
+
+                if (i == 1000000)
+                    break;
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
+                updateLeaderboard(reader.readLine());
             }
         }
+    }
 
-        return map;
+    private Socket createSocket(String host, int port) throws IOException {
+        return new Socket(host, port);
+    }
+
+    private BufferedReader createReader(Socket socket) throws IOException {
+        return new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    }
+
+    private PrintWriter createWriter(Socket socket) throws IOException {
+        return new PrintWriter(socket.getOutputStream(), true);
+    }
+
+    private void sendData(PrintWriter writer, String nickname, Socket socket) {
+        writer.println(allCoins + ":" + nickname + ":" + socket.getLocalAddress().getHostAddress());
     }
 
     public void createScreen(Stage primaryStage) {
+        double sceneWidth = 1200;
+        double sceneHeight = 800;
+
         mainPane = new Pane();
-        scene = new Scene(mainPane, 1200, 800);
+        scene = new Scene(mainPane, sceneWidth, sceneHeight);
 
-        Color backgroundColor = Color.rgb(71, 25, 171);
-        double backgroundWidth = scene.getWidth() / 3.0;
-        BackgroundFill backgroundFill = new BackgroundFill(backgroundColor, null, null);
-        Background background = new Background(backgroundFill);
-
-        root = new BorderPane();
-        root.setBackground(background);
-        root.setPrefWidth(backgroundWidth);
-        root.setPrefHeight(scene.getHeight());
-
-        mainPane.getChildren().add(root);
-
-        Color backgroundColor2 = Color.LAVENDER;
-        double backgroundWidth2 = scene.getWidth() / 3.0;
-        BackgroundFill backgroundFill2 = new BackgroundFill(backgroundColor2, null, null);
-        Background background2 = new Background(backgroundFill2);
-
-        Pane pane2 = new Pane();
-        pane2.setBackground(background2);
-        pane2.setPrefWidth(backgroundWidth2);
-        pane2.setPrefHeight(scene.getHeight());
-        pane2.setLayoutX(backgroundWidth);
-
-        Image gifImage = new Image("btc.gif");
-
-        pane2.setBackground(new Background(new BackgroundImage(gifImage, BackgroundRepeat.REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, BackgroundSize.DEFAULT)));
-
-        mainPane.getChildren().add(pane2);
-
-        Color backgroundColor3 = Color.GOLDENROD;
-        double backgroundWidth3 = scene.getWidth() / 3.0;
-        BackgroundFill backgroundFill3 = new BackgroundFill(backgroundColor3, null, null);
-        Background background3 = new Background(backgroundFill3);
-
-        Pane pane3 = new Pane();
-        pane3.setBackground(background3);
-        pane3.setPrefWidth(backgroundWidth3);
-        pane3.setPrefHeight(scene.getHeight());
-        pane3.setLayoutX(backgroundWidth * 2);
-
-        mainPane.getChildren().add(pane3);
+        createLeftPane(sceneWidth, sceneHeight);
+        createCenterPane(sceneWidth, sceneHeight);
+        createRightPane(sceneWidth, sceneHeight);
 
         createRectangles();
-
         createUpgrades();
-
         createHelpButton();
+
+        configurePrimaryStage(primaryStage);
+
+        primaryStage.show();
+    }
+
+    private void createLeftPane(double sceneWidth, double sceneHeight) {
+        Pane leftPane = createPaneWithBackground(sceneWidth / 3.0, sceneHeight, 0, Color.rgb(71, 25, 171));
+        root = new BorderPane();
+        root.setBackground(new Background(new BackgroundFill(Color.rgb(71, 25, 171), null, null)));
+        root.setPrefWidth(sceneWidth / 3.0);
+        root.setPrefHeight(sceneHeight);
+        mainPane.getChildren().add(root);
+    }
+
+    private void createCenterPane(double sceneWidth, double sceneHeight) {
+        Pane centerPane = createPaneWithBackground(sceneWidth / 3.0, sceneHeight, sceneWidth / 3.0, Color.LAVENDER);
+        Image gifImage = new Image("btc.gif");
+        centerPane.setBackground(new Background(new BackgroundImage(gifImage, BackgroundRepeat.REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, BackgroundSize.DEFAULT)));
+        mainPane.getChildren().add(centerPane);
+    }
+
+    private void createRightPane(double sceneWidth, double sceneHeight) {
+        Pane rightPane = createPaneWithBackground(sceneWidth / 3.0, sceneHeight, sceneWidth / 3.0 * 2, Color.GOLDENROD);
+        mainPane.getChildren().add(rightPane);
+    }
+
+    private Pane createPaneWithBackground(double width, double height, double translateX, Paint fill) {
+        Pane pane = new Pane();
+        pane.setPrefWidth(width);
+        pane.setPrefHeight(height);
+        pane.setTranslateX(translateX);
+        pane.setBackground(new Background(new BackgroundFill(fill, null, null)));
+        return pane;
+    }
+
+    private void configurePrimaryStage(Stage primaryStage) {
+        primaryStage.setTitle("Crypto clicker");
+        primaryStage.setResizable(false);
+        primaryStage.setScene(scene);
     }
 
     private void createHelpButton() {
@@ -257,13 +254,36 @@ public class HelloApplication extends Application {
     }
 
     private void showPopup() {
+        Stage popupStage = createPopupStage();
+        VBox popupContent = createPopupContent();
+        Scene popupScene = createPopupScene(popupContent);
+
+        configurePopupStage(popupStage, popupScene);
+
+        popupStage.showAndWait();
+    }
+
+    private Stage createPopupStage() {
         Stage popupStage = new Stage();
         popupStage.initModality(Modality.APPLICATION_MODAL);
         popupStage.initOwner(mainPane.getScene().getWindow());
+        return popupStage;
+    }
 
+    private VBox createPopupContent() {
         VBox popupContent = new VBox(10);
         popupContent.setPadding(new Insets(20));
 
+        Label messageLabel = createMessageLabel();
+        Button closeButton = createCloseButton();
+
+        popupContent.getChildren().addAll(messageLabel, closeButton);
+        popupContent.setAlignment(Pos.CENTER);
+
+        return popupContent;
+    }
+
+    private Label createMessageLabel() {
         Label messageLabel = new Label("Welcome to the Game!\n\n" +
                 "In this game, your objective is to collect coins by clicking the button.\n" +
                 "You can purchase upgrades to increase your earnings per click or automate the coin collection.\n" +
@@ -273,15 +293,21 @@ public class HelloApplication extends Application {
         messageLabel.setWrapText(true);
         messageLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
 
+        return messageLabel;
+    }
+
+    private Button createCloseButton() {
         Button closeButton = new Button("Close");
-        closeButton.setOnAction(event -> popupStage.close());
+        closeButton.setOnAction(event -> ((Stage) closeButton.getScene().getWindow()).close());
+        return closeButton;
+    }
 
-        popupContent.getChildren().addAll(messageLabel, closeButton);
-        popupContent.setAlignment(Pos.CENTER);
+    private Scene createPopupScene(VBox popupContent) {
+        return new Scene(popupContent, 500, 300);
+    }
 
-        Scene popupScene = new Scene(popupContent, 500, 300);
+    private void configurePopupStage(Stage popupStage, Scene popupScene) {
         popupStage.setScene(popupScene);
-        popupStage.showAndWait();
     }
 
     private void createRectangles() {
@@ -333,29 +359,11 @@ public class HelloApplication extends Application {
         clickerImageView.setFitWidth(200);
         clickerImageView.setFitHeight(200);
 
-        imageButton = new Button();
+        imageButton = createButton();
         imageButton.setGraphic(clickerImageView);
-        imageButton.setLayoutX(100);
-        imageButton.setLayoutY(300);
-        imageButton.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
-
-        ScaleTransition scaleInTransition = new ScaleTransition(Duration.millis(100), imageButton);
-        scaleInTransition.setFromX(1.0);
-        scaleInTransition.setFromY(1.0);
-        scaleInTransition.setToX(1.05);
-        scaleInTransition.setToY(1.05);
-
-        ScaleTransition scaleOutTransition = new ScaleTransition(Duration.millis(100), imageButton);
-        scaleOutTransition.setFromX(1.05);
-        scaleOutTransition.setFromY(1.05);
-        scaleOutTransition.setToX(1.0);
-        scaleOutTransition.setToY(1.0);
-
         imageButton.setOnAction(event -> {
             counterCoins += myCursor.getCoinsPerClick();
             bumpCoinStats();
-            scaleInTransition.setOnFinished(e -> scaleOutTransition.play());
-            scaleInTransition.play();
         });
 
         Pane pane = new Pane();
@@ -364,48 +372,62 @@ public class HelloApplication extends Application {
         root.setCenter(pane);
     }
 
+    private Button createButton() {
+        Button button = new Button();
+        button.setLayoutX(100);
+        button.setLayoutY(300);
+        button.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
+
+        ScaleTransition scaleInTransition = createScaleTransition(button, 1.0, 1.05, 100);
+        ScaleTransition scaleOutTransition = createScaleTransition(button, 1.05, 1.0, 100);
+
+        button.setOnMouseEntered(event -> scaleInTransition.play());
+        button.setOnMouseExited(event -> scaleOutTransition.play());
+
+        return button;
+    }
+
+    private ScaleTransition createScaleTransition(Node node, double fromValue, double toValue, int duration) {
+        ScaleTransition scaleTransition = new ScaleTransition(Duration.millis(duration), node);
+        scaleTransition.setFromX(fromValue);
+        scaleTransition.setFromY(fromValue);
+        scaleTransition.setToX(toValue);
+        scaleTransition.setToY(toValue);
+        return scaleTransition;
+    }
+
     public void createCounters() {
         Font font = Font.font("Arial", FontWeight.BOLD, 30);
+        DropShadow dropShadow = createDropShadow();
 
+        counterText = createText("0.0", font, Color.FUCHSIA, dropShadow, 195, 220);
+        root.getChildren().add(counterText);
+
+        perClickText = createText("1.0", font, Color.FUCHSIA, dropShadow, 195, 610);
+        root.getChildren().add(perClickText);
+
+        perSecondText = createText("0.0", font, Color.FUCHSIA, dropShadow, 195, 700);
+        root.getChildren().add(perSecondText);
+    }
+
+    private DropShadow createDropShadow() {
         DropShadow dropShadow = new DropShadow();
         dropShadow.setColor(Color.PURPLE);
         dropShadow.setRadius(20);
         dropShadow.setSpread(0.8);
         dropShadow.setOffsetX(0);
         dropShadow.setOffsetY(0);
+        return dropShadow;
+    }
 
-        counterText = new Text("0.0");
-        counterText.setLayoutX(195);
-        counterText.setLayoutY(220);
-        counterText.setFont(font);
-        counterText.setFill(Color.FUCHSIA);
-        counterText.setEffect(dropShadow);
-        counterText.setLayoutX(150);
-        counterText.setLayoutY(120);
-
-        root.getChildren().add(counterText);
-
-        perClickText = new Text("1.0");
-        perClickText.setLayoutX(195);
-        perClickText.setLayoutY(610);
-        perClickText.setFill(Color.FUCHSIA);
-        perClickText.setFont(font);
-        perClickText.setEffect(dropShadow);
-        perClickText.setLayoutX(150);
-        perClickText.setLayoutY(120);
-
-        root.getChildren().add(perClickText);
-
-        perSecondText = new Text("0.0");
-        perSecondText.setLayoutX(195);
-        perSecondText.setLayoutY(700);
-        perSecondText.setFont(font);
-        perSecondText.setFill(Color.FUCHSIA);
-        perSecondText.setEffect(dropShadow);
-        perSecondText.setLayoutX(150);
-        perSecondText.setLayoutY(120);
-
-        root.getChildren().add(perSecondText);
+    private Text createText(String text, Font font, Color color, Effect effect, double layoutX, double layoutY) {
+        Text textNode = new Text(text);
+        textNode.setFont(font);
+        textNode.setFill(color);
+        textNode.setEffect(effect);
+        textNode.setLayoutX(layoutX);
+        textNode.setLayoutY(layoutY);
+        return textNode;
     }
 
     public void createTexts() {

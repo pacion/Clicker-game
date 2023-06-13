@@ -1,19 +1,22 @@
 package com.example.pio;
 
-import com.almasb.fxgl.app.SystemActions;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
 
 public class Host {
 
-    private static Leaderboard leaderboard = new Leaderboard();
+    private static final Leaderboard leaderboard = new Leaderboard();
+
+    private static final int PORT = 8080;
 
     public static void main(String[] args) {
 
         try {
-            ServerSocket serverSocket = new ServerSocket(8080);
+            ServerSocket serverSocket = new ServerSocket(PORT);
             System.out.println("Server started. Waiting for clients...");
 
             while (true) {
@@ -31,7 +34,7 @@ public class Host {
     }
 
     static class ClientHandler implements Runnable {
-        private Socket clientSocket;
+        private final Socket clientSocket;
 
         ClientHandler(Socket socket) {
             this.clientSocket = socket;
@@ -44,7 +47,7 @@ public class Host {
                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 
                 while (true) {
-                        String message = in.readLine();
+                    String message = in.readLine();
                     if (message == null) {
                         break;
                     }
