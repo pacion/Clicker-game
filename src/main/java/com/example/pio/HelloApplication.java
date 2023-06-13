@@ -23,6 +23,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -37,6 +38,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public class HelloApplication extends Application {
+
+    private static final String IP_HOST = "localhost";
 
     private Pane mainPane;
     private Scene scene;
@@ -124,7 +127,7 @@ public class HelloApplication extends Application {
 
             Thread socketThread = new Thread(() -> {
                 try {
-                    Socket socket = new Socket("192.168.56.1", 8080);
+                    Socket socket = new Socket(IP_HOST, 8080);
 
                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
@@ -229,6 +232,56 @@ public class HelloApplication extends Application {
         createRectangles();
 
         createUpgrades();
+
+        createHelpButton();
+    }
+
+    private void createHelpButton() {
+        Rectangle clickableDiv = createClickableDiv();
+        StackPane.setAlignment(clickableDiv, Pos.BOTTOM_LEFT);
+        StackPane.setMargin(clickableDiv, new Insets(0, 20, 20, 0));
+        StackPane rootPane = new StackPane();
+        rootPane.getChildren().add(clickableDiv);
+        root.setBottom(rootPane);
+
+        clickableDiv.setOnMouseClicked(event -> showPopup());
+    }
+
+    private Rectangle createClickableDiv() {
+        Rectangle div = new Rectangle(100, 50);
+        div.setFill(Color.YELLOWGREEN);
+        div.setStroke(Color.BLACK);
+        div.setStrokeWidth(1);
+
+        return div;
+    }
+
+    private void showPopup() {
+        Stage popupStage = new Stage();
+        popupStage.initModality(Modality.APPLICATION_MODAL);
+        popupStage.initOwner(mainPane.getScene().getWindow());
+
+        VBox popupContent = new VBox(10);
+        popupContent.setPadding(new Insets(20));
+
+        Label messageLabel = new Label("Welcome to the Game!\n\n" +
+                "In this game, your objective is to collect coins by clicking the button.\n" +
+                "You can purchase upgrades to increase your earnings per click or automate the coin collection.\n" +
+                "As you accumulate more coins, you'll unlock more expensive upgrades.\n" +
+                "Challenge yourself to reach the top of the leaderboard and collect as many coins as possible!");
+
+        messageLabel.setWrapText(true);
+        messageLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+
+        Button closeButton = new Button("Close");
+        closeButton.setOnAction(event -> popupStage.close());
+
+        popupContent.getChildren().addAll(messageLabel, closeButton);
+        popupContent.setAlignment(Pos.CENTER);
+
+        Scene popupScene = new Scene(popupContent, 500, 300);
+        popupStage.setScene(popupScene);
+        popupStage.showAndWait();
     }
 
     private void createRectangles() {
@@ -241,13 +294,6 @@ public class HelloApplication extends Application {
         mainPane.getChildren().addAll(rectangles);
         mainPane.getChildren().addAll(nicknames);
         mainPane.getChildren().addAll(usersCoins);
-    }
-
-    private Label createColoredLabel(String text, Color backgroundColor) {
-        Label label = new Label(text);
-        label.setBackground(new Background(new BackgroundFill(backgroundColor, null, null)));
-        label.setPadding(new Insets(5));
-        return label;
     }
 
     private Rectangle createRectangle(Color color, double y) {
@@ -307,22 +353,20 @@ public class HelloApplication extends Application {
 
         imageButton.setOnAction(event -> {
             counterCoins += myCursor.getCoinsPerClick();
-            counterText.setText(counterCoins.toString());
-            perClickText.setText(counterPerClick.toString());
-            perSecondText.setText(counterPerSecond.toString());
+            bumpCoinStats();
             scaleInTransition.setOnFinished(e -> scaleOutTransition.play());
             scaleInTransition.play();
         });
 
         Pane pane = new Pane();
-        pane.getChildren().
-
-                add(imageButton);
+        pane.getChildren().add(imageButton);
 
         root.setCenter(pane);
     }
 
     public void createCounters() {
+        Font font = Font.font("Arial", FontWeight.BOLD, 30);
+
         DropShadow dropShadow = new DropShadow();
         dropShadow.setColor(Color.PURPLE);
         dropShadow.setRadius(20);
@@ -333,7 +377,7 @@ public class HelloApplication extends Application {
         counterText = new Text("0.0");
         counterText.setLayoutX(195);
         counterText.setLayoutY(220);
-        counterText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        counterText.setFont(font);
         counterText.setFill(Color.FUCHSIA);
         counterText.setEffect(dropShadow);
         counterText.setLayoutX(150);
@@ -345,7 +389,7 @@ public class HelloApplication extends Application {
         perClickText.setLayoutX(195);
         perClickText.setLayoutY(610);
         perClickText.setFill(Color.FUCHSIA);
-        perClickText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        perClickText.setFont(font);
         perClickText.setEffect(dropShadow);
         perClickText.setLayoutX(150);
         perClickText.setLayoutY(120);
@@ -355,7 +399,7 @@ public class HelloApplication extends Application {
         perSecondText = new Text("0.0");
         perSecondText.setLayoutX(195);
         perSecondText.setLayoutY(700);
-        perSecondText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        perSecondText.setFont(font);
         perSecondText.setFill(Color.FUCHSIA);
         perSecondText.setEffect(dropShadow);
         perSecondText.setLayoutX(150);
@@ -365,30 +409,31 @@ public class HelloApplication extends Application {
     }
 
     public void createTexts() {
+        Font font = Font.font("Arial", FontWeight.BOLD, 30);
         coins = new Text("MY CURRENT SCORE:");
         coins.setLayoutX(40);
-        coins.setLayoutY(200);
-        coins.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        coins.setLayoutY(160);
+        coins.setFont(font);
         coins.setFill(Color.WHITE);
         root.getChildren().add(coins);
 
         perClick = new Text("Score per click:");
         perClick.setLayoutX(75);
-        perClick.setLayoutY(570);
-        perClick.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        perClick.setLayoutY(540);
+        perClick.setFont(font);
         perClick.setFill(Color.WHITE);
         root.getChildren().add(perClick);
 
         perSecond = new Text("Score per second:");
         perSecond.setLayoutX(75);
-        perSecond.setLayoutY(655);
-        perSecond.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        perSecond.setLayoutY(625);
+        perSecond.setFont(font);
         perSecond.setFill(Color.WHITE);
         root.getChildren().add(perSecond);
 
         timerText = new Text("Time in seconds: 0");
         timerText.setLayoutX(20);
-        timerText.setLayoutY(50);
+        timerText.setLayoutY(30);
         timerText.setFill(Color.WHITE);
         timerText.setFont(Font.font("Arial", FontWeight.SEMI_BOLD, 20));
     }
@@ -487,9 +532,7 @@ public class HelloApplication extends Application {
             } else {
                 playTextAnimation();
             }
-            counterText.setText(counterCoins.toString());
-            perClickText.setText(counterPerClick.toString());
-            perSecondText.setText(counterPerSecond.toString());
+            bumpCoinStats();
         });
 
         secondUpgrade = new Button();
@@ -524,9 +567,7 @@ public class HelloApplication extends Application {
             } else {
                 playTextAnimation();
             }
-            counterText.setText(counterCoins.toString());
-            perClickText.setText(counterPerClick.toString());
-            perSecondText.setText(counterPerSecond.toString());
+            bumpCoinStats();
         });
 
         thirdUpgrade = new Button();
@@ -561,9 +602,7 @@ public class HelloApplication extends Application {
             } else {
                 playTextAnimation();
             }
-            counterText.setText(counterCoins.toString());
-            perClickText.setText(counterPerClick.toString());
-            perSecondText.setText(counterPerSecond.toString());
+            bumpCoinStats();
         });
 
         fourthUpgrade = new Button();
@@ -598,9 +637,7 @@ public class HelloApplication extends Application {
             } else {
                 playTextAnimation();
             }
-            counterText.setText(counterCoins.toString());
-            perClickText.setText(counterPerClick.toString());
-            perSecondText.setText(counterPerSecond.toString());
+            bumpCoinStats();
         });
 
         mainPane.getChildren().add(firstUpgrade);
@@ -608,6 +645,12 @@ public class HelloApplication extends Application {
         mainPane.getChildren().add(thirdUpgrade);
         mainPane.getChildren().add(fourthUpgrade);
         createUpgradeAmountText();
+    }
+
+    private void bumpCoinStats() {
+        counterText.setText(counterCoins.toString());
+        perClickText.setText(counterPerClick.toString());
+        perSecondText.setText(counterPerSecond.toString());
     }
 
     private void createUpgradeAmountText() {
@@ -652,7 +695,6 @@ public class HelloApplication extends Application {
         firstUpgrade.setOnMousePressed(event -> firstUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
 
         firstUpgrade.setOnMouseReleased(event -> firstUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
-
 
         firstUpgrade.setOnMouseEntered(event -> firstUpgrade.setCursor(Cursor.HAND));
 
