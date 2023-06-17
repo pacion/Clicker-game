@@ -20,6 +20,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -57,12 +58,10 @@ public class HelloApplication extends Application {
     private Text coins;
     private Text counterText;
     private Double currentCoins = 0D;
-    private Double counterCoins = 0D;
     private Double allCoins = 0D;
 
     private Text perClick;
     private Text perClickText;
-    private Double counterPerClick = 1D;
 
     private Text perSecond;
     private Text perSecondText;
@@ -237,6 +236,7 @@ public class HelloApplication extends Application {
         Rectangle clickableDiv = createClickableDiv();
         StackPane.setAlignment(clickableDiv, Pos.BOTTOM_LEFT);
         StackPane.setMargin(clickableDiv, new Insets(0, 20, 20, 0));
+        clickableDiv.setCursor(Cursor.HAND);
         StackPane rootPane = new StackPane();
         rootPane.getChildren().add(clickableDiv);
         root.setBottom(rootPane);
@@ -245,8 +245,14 @@ public class HelloApplication extends Application {
     }
 
     private Rectangle createClickableDiv() {
-        Rectangle div = new Rectangle(100, 50);
-        div.setFill(Color.YELLOWGREEN);
+        Rectangle div = new Rectangle(50, 50);
+        Image image = new Image("help.png");
+
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(div.getWidth());
+        imageView.setFitHeight(div.getHeight());
+
+        div.setFill(new ImagePattern(imageView.snapshot(null, null)));
         div.setStroke(Color.BLACK);
         div.setStrokeWidth(1);
 
@@ -259,6 +265,7 @@ public class HelloApplication extends Application {
         Scene popupScene = createPopupScene(popupContent);
 
         configurePopupStage(popupStage, popupScene);
+        popupStage.setTitle("Help");
 
         popupStage.showAndWait();
     }
@@ -275,31 +282,36 @@ public class HelloApplication extends Application {
         popupContent.setPadding(new Insets(20));
 
         Label messageLabel = createMessageLabel();
-        Button closeButton = createCloseButton();
+        Button okButton = createOkButton();
 
-        popupContent.getChildren().addAll(messageLabel, closeButton);
+        popupContent.getChildren().addAll(messageLabel, okButton);
         popupContent.setAlignment(Pos.CENTER);
+        popupContent.setBackground(new Background(new BackgroundFill(Color.LIGHTBLUE, null, null)));
 
         return popupContent;
     }
 
     private Label createMessageLabel() {
-        Label messageLabel = new Label("Welcome to the Game!\n\n" +
-                "In this game, your objective is to collect coins by clicking the button.\n" +
-                "You can purchase upgrades to increase your earnings per click or automate the coin collection.\n" +
-                "As you accumulate more coins, you'll unlock more expensive upgrades.\n" +
-                "Challenge yourself to reach the top of the leaderboard and collect as many coins as possible!");
+        Label messageLabel = new Label("Witamy w Crypto Cicker!\n\n" +
+                "W tej grze twoim celem jest zebranie jak największej ilości monet.\n" +
+                "Możesz to robić klikając na obraz żetonu lub po zebraniu odpowiedniej ilości monet, możesz kupić ulepszenia, które pozwolą Ci zbierać monety automatycznie co sekunę.\n" +
+                "Zbieraj monety, pokonuj swoich znajomych i dotrzyj na szczyt rankingu.\n" +
+                "Powodzenia!");
 
         messageLabel.setWrapText(true);
-        messageLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+        messageLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 
         return messageLabel;
     }
 
-    private Button createCloseButton() {
-        Button closeButton = new Button("Close");
-        closeButton.setOnAction(event -> ((Stage) closeButton.getScene().getWindow()).close());
-        return closeButton;
+    private Button createOkButton() {
+        Button okButton = new Button("OK");
+        okButton.setPrefHeight(45);
+        okButton.setPrefWidth(75);
+        okButton.setBackground(new Background(new BackgroundFill(Color.LIGHTGREEN, null, null)));
+        okButton.setCursor(Cursor.HAND);
+        okButton.setOnAction(event -> ((Stage) okButton.getScene().getWindow()).close());
+        return okButton;
     }
 
     private Scene createPopupScene(VBox popupContent) {
@@ -362,7 +374,8 @@ public class HelloApplication extends Application {
         imageButton = createButton();
         imageButton.setGraphic(clickerImageView);
         imageButton.setOnAction(event -> {
-            counterCoins += myCursor.getCoinsPerClick();
+            currentCoins += myCursor.getCoinsPerClick();
+            allCoins += myCursor.getCoinsPerClick();
             bumpCoinStats();
         });
 
@@ -474,7 +487,7 @@ public class HelloApplication extends Application {
 
         highlightedText.setEffect(dropShadow);
 
-        highlightedText.setLayoutX(150);
+        highlightedText.setLayoutX(160);
         highlightedText.setLayoutY(120);
 
         mainPane.getChildren().add(highlightedText);
@@ -498,8 +511,9 @@ public class HelloApplication extends Application {
 
     public void upgrade() {
         var df = new DecimalFormat("#.##");
+        Double coinsPerSecond = dogeCoin.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + ethereum.getCoinsPerSecond();
         counterText.setText(df.format(currentCoins.doubleValue()));
-        perSecondText.setText(df.format(counterPerSecond.doubleValue()));
+        perSecondText.setText(df.format(coinsPerSecond.doubleValue()));
         perClickText.setText(df.format(myCursor.getCoinsPerClick().doubleValue()));
     }
 
@@ -549,8 +563,9 @@ public class HelloApplication extends Application {
         doSomethingWithButton(firstUpgrade);
 
         firstUpgrade.setOnAction(event -> {
-            if (myCursor.isAvailableToBuy(counterCoins)) {
-                counterCoins -= myCursor.buyCursor();
+            if (myCursor.isAvailableToBuy(currentCoins)) {
+                currentCoins -= myCursor.buyCursor();
+                cursorValue.setText(String.valueOf(myCursor.getPrice()));
             } else {
                 playTextAnimation();
             }
@@ -584,8 +599,9 @@ public class HelloApplication extends Application {
         doSomethingWithButton(secondUpgrade);
 
         secondUpgrade.setOnAction(event -> {
-            if (dogeCoin.isAvailableToBuy(counterCoins)) {
-                counterCoins -= dogeCoin.buyCrypto();
+            if (dogeCoin.isAvailableToBuy(currentCoins)) {
+                currentCoins -= dogeCoin.buyCrypto();
+                dogeCoinValue.setText(String.valueOf(dogeCoin.getPrice()));
             } else {
                 playTextAnimation();
             }
@@ -619,8 +635,9 @@ public class HelloApplication extends Application {
         doSomethingWithButton(thirdUpgrade);
 
         thirdUpgrade.setOnAction(event -> {
-            if (ethereum.isAvailableToBuy(counterCoins)) {
-                counterCoins -= ethereum.buyCrypto();
+            if (ethereum.isAvailableToBuy(currentCoins)) {
+                currentCoins -= ethereum.buyCrypto();
+                etherumValue.setText(String.valueOf(ethereum.getPrice()));
             } else {
                 playTextAnimation();
             }
@@ -654,8 +671,9 @@ public class HelloApplication extends Application {
         doSomethingWithButton(fourthUpgrade);
 
         fourthUpgrade.setOnAction(event -> {
-            if (bitcoin.isAvailableToBuy(counterCoins)) {
-                counterCoins -= bitcoin.buyCrypto();
+            if (bitcoin.isAvailableToBuy(currentCoins)) {
+                currentCoins -= bitcoin.buyCrypto();
+                bitcoinValue.setText(String.valueOf(bitcoin.getPrice()));
             } else {
                 playTextAnimation();
             }
@@ -670,9 +688,19 @@ public class HelloApplication extends Application {
     }
 
     private void bumpCoinStats() {
-        counterText.setText(counterCoins.toString());
-        perClickText.setText(counterPerClick.toString());
-        perSecondText.setText(counterPerSecond.toString());
+        var df = new DecimalFormat("#.##");
+        counterText.setText(df.format(currentCoins.doubleValue()));
+        counterPerSecond = dogeCoin.getCoinsPerSecond() + ethereum.getCoinsPerSecond() + bitcoin.getCoinsPerSecond();
+        perSecondText.setText(df.format(counterPerSecond.doubleValue()));
+        perClickText.setText(df.format(myCursor.getCoinsPerClick().doubleValue()));
+        Long cursorAmount = myCursor.getAmount();
+        Long dogeCoinAmount = dogeCoin.getAmount();
+        Long ethereumAmount = ethereum.getAmount();
+        Long bitcoinAmount = bitcoin.getAmount();
+        userUpgrades[0].setText(df.format(cursorAmount.longValue()));
+        userUpgrades[1].setText(df.format(dogeCoinAmount.longValue()));
+        userUpgrades[2].setText(df.format(ethereumAmount.longValue()));
+        userUpgrades[3].setText(df.format(bitcoinAmount.longValue()));
     }
 
     private void createUpgradeAmountText() {
