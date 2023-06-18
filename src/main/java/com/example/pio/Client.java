@@ -11,13 +11,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Effect;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
@@ -77,6 +74,7 @@ public class Client extends Application {
     private Text[] nicknames;
     private Text[] usersCoins;
     private Text[] userUpgrades;
+    private Text highlightedText;
 
     public Client() {
         this.bitcoin = new Bitcoin();
@@ -94,6 +92,8 @@ public class Client extends Application {
         try {
             primaryStage.setTitle("Crypto clicker");
             primaryStage.setResizable(false);
+            nickname = getUserNickname();
+            highlightedText = new Text(String.valueOf(nickname));
 
             createScreen(primaryStage);
             setImageButton();
@@ -105,10 +105,6 @@ public class Client extends Application {
 
             primaryStage.setScene(scene);
             primaryStage.show();
-
-            nickname = getUserNickname();
-
-            showUser();
 
             Thread socketThread = new Thread(() -> {
                 try {
@@ -126,7 +122,37 @@ public class Client extends Application {
 
     private String getUserNickname() {
         TextInputDialog dialog = createNicknameDialog();
-        Optional<String> result = dialog.showAndWait();
+
+        dialog.setResultConverter(buttonType -> {
+            if (buttonType == ButtonType.OK) {
+                String userInput = dialog.getEditor().getText();
+                if (userInput.length() < 2) {
+
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setHeaderText("ERROR");
+                    errorAlert.setContentText("Not enough characters");
+                    errorAlert.showAndWait();
+                    dialog.getEditor().clear();
+                    return null;
+                }
+                if (userInput.length() >= 10) {
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setHeaderText("ERROR");
+                    errorAlert.setContentText("Too many characters");
+                    errorAlert.showAndWait();
+                    dialog.getEditor().clear();
+                    return null;
+                }
+                return userInput;
+            }
+            return null;
+        });
+
+        Optional<String> result = Optional.empty();
+        while (!result.isPresent() || result.get().length() < 2 || result.get().length() > 15) {
+            result = dialog.showAndWait();
+        }
+
         return result.orElse("");
     }
 
@@ -137,7 +163,6 @@ public class Client extends Application {
         dialog.setContentText("Please enter your nickname:");
         return dialog;
     }
-
 
     private void connectAndSendData(String nickname) throws IOException {
         try (Socket socket = createSocket(IP_HOST, 8080);
@@ -238,23 +263,36 @@ public class Client extends Application {
         StackPane.setMargin(clickableDiv, new Insets(0, 20, 20, 0));
         clickableDiv.setCursor(Cursor.HAND);
         StackPane rootPane = new StackPane();
+        rootPane.setLayoutX(1143);
+        rootPane.setLayoutY(10);
         rootPane.getChildren().add(clickableDiv);
-        root.setBottom(rootPane);
+        mainPane.getChildren().add(rootPane);
 
         clickableDiv.setOnMouseClicked(event -> showPopup());
     }
 
     private Rectangle createClickableDiv() {
-        Rectangle div = new Rectangle(50, 50);
+        Rectangle div = new Rectangle(40, 40);
         Image image = new Image("help.png");
 
         ImageView imageView = new ImageView(image);
         imageView.setFitWidth(div.getWidth());
         imageView.setFitHeight(div.getHeight());
 
-        div.setFill(new ImagePattern(imageView.snapshot(null, null)));
-        div.setStroke(Color.BLACK);
-        div.setStrokeWidth(1);
+        PixelReader pixelReader = image.getPixelReader();
+        WritableImage transparentImage = new WritableImage(pixelReader, (int) image.getWidth(), (int) image.getHeight());
+        PixelWriter pixelWriter = transparentImage.getPixelWriter();
+
+        for (int y = 0; y < transparentImage.getHeight(); y++) {
+            for (int x = 0; x < transparentImage.getWidth(); x++) {
+                Color color = pixelReader.getColor(x, y);
+                if (color.getOpacity() > 0) {
+                    pixelWriter.setColor(x, y, color);
+                }
+            }
+        }
+
+        div.setFill(new ImagePattern(transparentImage));
 
         return div;
     }
@@ -294,7 +332,7 @@ public class Client extends Application {
     private Label createMessageLabel() {
         Label messageLabel = new Label("Witamy w Crypto Cicker!\n\n" +
                 "W tej grze twoim celem jest zebranie jak największej ilości monet.\n" +
-                "Możesz to robić klikając na obraz żetonu lub po zebraniu odpowiedniej ilości monet, możesz kupić ulepszenia, które pozwolą Ci zbierać monety automatycznie co sekunę.\n" +
+                "Możesz to robić, klikając na obraz żetonu lub po zebraniu odpowiedniej ilości monet, możesz kupić ulepszenia, które pozwolą Ci zbierać monety automatycznie co sekundę.\n" +
                 "Zbieraj monety, pokonuj swoich znajomych i dotrzyj na szczyt rankingu.\n" +
                 "Powodzenia!");
 
@@ -324,9 +362,9 @@ public class Client extends Application {
 
     private void createRectangles() {
         rectangles = new Rectangle[4];
-        rectangles[0] = createRectangle(Color.GOLD, 30);
-        rectangles[1] = createRectangle(Color.SILVER, 110);
-        rectangles[2] = createRectangle(Color.BROWN, 190);
+        rectangles[0] = createRectangle(Color.GOLD, 60);
+        rectangles[1] = createRectangle(Color.SILVER, 130);
+        rectangles[2] = createRectangle(Color.BROWN, 200);
         rectangles[3] = createRectangle(Color.TAN, 270);
 
         mainPane.getChildren().addAll(rectangles);
@@ -338,7 +376,7 @@ public class Client extends Application {
         nicknames = new Text[4];
         usersCoins = new Text[4];
 
-        int offset = 80;
+        int offset = 70;
 
         for (int i = 0; i < 4; i++) {
             nicknames[i] = new Text();
@@ -346,13 +384,13 @@ public class Client extends Application {
             nicknames[i].setFont(Font.font("Arial", FontWeight.THIN, 24));
             nicknames[i].setFill(Color.rgb(140, 20, 199));
             nicknames[i].setX(850);
-            nicknames[i].setY(70 + offset * i);
+            nicknames[i].setY(100 + offset * i);
             usersCoins[i] = new Text();
             usersCoins[i].setText("0");
             usersCoins[i].setFont(Font.font("Arial", FontWeight.EXTRA_LIGHT, 24));
             usersCoins[i].setFill(Color.rgb(89, 180, 79));
-            usersCoins[i].setX(1025);
-            usersCoins[i].setY(70 + offset * i);
+            usersCoins[i].setX(1035);
+            usersCoins[i].setY(100 + offset * i);
         }
 
         Rectangle rectangle = new Rectangle();
@@ -421,6 +459,11 @@ public class Client extends Application {
 
         perSecondText = createText("0.0", font, Color.FUCHSIA, dropShadow, 195, 700);
         root.getChildren().add(perSecondText);
+
+        highlightedText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        highlightedText.setFill(Color.FUCHSIA);
+
+        root.getChildren().add(highlightedText);
     }
 
     private DropShadow createDropShadow() {
@@ -447,7 +490,7 @@ public class Client extends Application {
         Font font = Font.font("Arial", FontWeight.BOLD, 30);
         coins = new Text("MY CURRENT SCORE:");
         coins.setLayoutX(40);
-        coins.setLayoutY(160);
+        coins.setLayoutY(190);
         coins.setFont(font);
         coins.setFill(Color.WHITE);
         root.getChildren().add(coins);
@@ -474,7 +517,6 @@ public class Client extends Application {
     }
 
     public void showUser() {
-        Text highlightedText = new Text(String.valueOf(nickname));
         highlightedText.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         highlightedText.setFill(Color.FUCHSIA);
 
@@ -494,23 +536,27 @@ public class Client extends Application {
     }
 
     public void setCounters() {
+
         StackPane stackPane = new StackPane();
         stackPane.getChildren().add(imageButton);
         stackPane.getChildren().add(counterText);
         stackPane.getChildren().add(perClickText);
         stackPane.getChildren().add(perSecondText);
+        stackPane.getChildren().add(highlightedText);
 
         stackPane.setAlignment(Pos.CENTER);
 
-        StackPane.setMargin(counterText, new Insets(-340, 0, 0, 0));
-        StackPane.setMargin(perClickText, new Insets(400, 0, 0, 0));
-        StackPane.setMargin(perSecondText, new Insets(570, 0, 0, 0));
+        StackPane.setMargin(imageButton, new Insets(-50, 0, 0, 0));
+        StackPane.setMargin(counterText, new Insets(-350, 0, 0, 0));
+        StackPane.setMargin(perClickText, new Insets(350, 0, 0, 0));
+        StackPane.setMargin(perSecondText, new Insets(520, 0, 0, 0)); //570 original
+        StackPane.setMargin(highlightedText, new Insets(-550, 0, 0, 0));
 
         root.setCenter(stackPane);
     }
 
     public void upgrade() {
-        var df = new DecimalFormat("#.##");
+        DecimalFormat df = new DecimalFormat("#.##");
         Double coinsPerSecond = dogeCoin.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + ethereum.getCoinsPerSecond();
         counterText.setText(df.format(currentCoins.doubleValue()));
         perSecondText.setText(df.format(coinsPerSecond.doubleValue()));
@@ -688,7 +734,7 @@ public class Client extends Application {
     }
 
     private void bumpCoinStats() {
-        var df = new DecimalFormat("#.##");
+        DecimalFormat df = new DecimalFormat("#.##");
         counterText.setText(df.format(currentCoins.doubleValue()));
         counterPerSecond = dogeCoin.getCoinsPerSecond() + ethereum.getCoinsPerSecond() + bitcoin.getCoinsPerSecond();
         perSecondText.setText(df.format(counterPerSecond.doubleValue()));
@@ -753,7 +799,8 @@ public class Client extends Application {
 
     private void playTextAnimation() {
         Text text = new Text("Not enough money");
-        text.setFont(Font.font("Arial", 26));
+        text.setFont(Font.font("Arial", FontWeight.BOLD, 26));
+        text.setFill(Color.RED);
 
         TranslateTransition transition = new TranslateTransition(Duration.seconds(1), text);
         transition.setFromX(490);
