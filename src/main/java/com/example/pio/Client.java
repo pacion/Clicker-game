@@ -6,6 +6,7 @@ import com.example.pio.upgrade.persecond.DogeCoin;
 import com.example.pio.upgrade.persecond.Ethereum;
 import javafx.animation.*;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -173,16 +174,43 @@ public class Client extends Application {
             while (true) {
                 sendData(writer, nickname, socket);
 
-                if (i == 1000000)
+                if (i == 1000000) {
                     break;
+                }
+
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                updateLeaderboard(reader.readLine());
+
+                var line = reader.readLine();
+
+                if(secondsElapsed == 60 * 10) {
+                    endGame(line);
+                }
+
+                updateLeaderboard(line);
             }
         }
+    }
+
+    private void endGame(String line) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Time ended");
+            alert.setHeaderText(null);
+
+            String[] players = line.split("/");
+            String[] playerStat = players[0].split(":");
+            String nick = playerStat[0];
+            String nickCoins = playerStat[1];
+
+            alert.setContentText("Winner: " + nick + " with " + nickCoins + " coins " + "\n" + "Your coins: " + allCoins);
+
+            alert.showAndWait();
+        });
+        System.exit(0);
     }
 
     private Socket createSocket(String host, int port) throws IOException {
