@@ -11,9 +11,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Effect;
 import javafx.scene.image.*;
@@ -76,6 +74,7 @@ public class Client extends Application {
     private Text[] nicknames;
     private Text[] usersCoins;
     private Text[] userUpgrades;
+    private Text highlightedText;
 
     public Client() {
         this.bitcoin = new Bitcoin();
@@ -93,6 +92,8 @@ public class Client extends Application {
         try {
             primaryStage.setTitle("Crypto clicker");
             primaryStage.setResizable(false);
+            nickname = getUserNickname();
+            highlightedText = new Text(String.valueOf(nickname));
 
             createScreen(primaryStage);
             setImageButton();
@@ -104,8 +105,6 @@ public class Client extends Application {
 
             primaryStage.setScene(scene);
             primaryStage.show();
-
-            showUser();
 
             Thread socketThread = new Thread(() -> {
                 try {
@@ -123,7 +122,37 @@ public class Client extends Application {
 
     private String getUserNickname() {
         TextInputDialog dialog = createNicknameDialog();
-        Optional<String> result = dialog.showAndWait();
+
+        dialog.setResultConverter(buttonType -> {
+            if (buttonType == ButtonType.OK) {
+                String userInput = dialog.getEditor().getText();
+                if (userInput.length() < 2) {
+
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setHeaderText("ERROR");
+                    errorAlert.setContentText("Not enough characters");
+                    errorAlert.showAndWait();
+                    dialog.getEditor().clear();
+                    return null;
+                }
+                if (userInput.length() >= 10) {
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setHeaderText("ERROR");
+                    errorAlert.setContentText("Too many characters");
+                    errorAlert.showAndWait();
+                    dialog.getEditor().clear();
+                    return null;
+                }
+                return userInput;
+            }
+            return null;
+        });
+
+        Optional<String> result = Optional.empty();
+        while (!result.isPresent() || result.get().length() < 2 || result.get().length() > 15) {
+            result = dialog.showAndWait();
+        }
+
         return result.orElse("");
     }
 
@@ -134,7 +163,6 @@ public class Client extends Application {
         dialog.setContentText("Please enter your nickname:");
         return dialog;
     }
-
 
     private void connectAndSendData(String nickname) throws IOException {
         try (Socket socket = createSocket(IP_HOST, 8080);
@@ -431,6 +459,11 @@ public class Client extends Application {
 
         perSecondText = createText("0.0", font, Color.FUCHSIA, dropShadow, 195, 700);
         root.getChildren().add(perSecondText);
+
+        highlightedText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        highlightedText.setFill(Color.FUCHSIA);
+
+        root.getChildren().add(highlightedText);
     }
 
     private DropShadow createDropShadow() {
@@ -457,7 +490,7 @@ public class Client extends Application {
         Font font = Font.font("Arial", FontWeight.BOLD, 30);
         coins = new Text("MY CURRENT SCORE:");
         coins.setLayoutX(40);
-        coins.setLayoutY(160);
+        coins.setLayoutY(190);
         coins.setFont(font);
         coins.setFill(Color.WHITE);
         root.getChildren().add(coins);
@@ -484,7 +517,6 @@ public class Client extends Application {
     }
 
     public void showUser() {
-        Text highlightedText = new Text(String.valueOf(nickname));
         highlightedText.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         highlightedText.setFill(Color.FUCHSIA);
 
@@ -504,17 +536,21 @@ public class Client extends Application {
     }
 
     public void setCounters() {
+
         StackPane stackPane = new StackPane();
         stackPane.getChildren().add(imageButton);
         stackPane.getChildren().add(counterText);
         stackPane.getChildren().add(perClickText);
         stackPane.getChildren().add(perSecondText);
+        stackPane.getChildren().add(highlightedText);
 
         stackPane.setAlignment(Pos.CENTER);
 
-        StackPane.setMargin(counterText, new Insets(-340, 0, 0, 0));
-        StackPane.setMargin(perClickText, new Insets(400, 0, 0, 0));
-        StackPane.setMargin(perSecondText, new Insets(570, 0, 0, 0));
+        StackPane.setMargin(imageButton, new Insets(-50, 0, 0, 0));
+        StackPane.setMargin(counterText, new Insets(-350, 0, 0, 0));
+        StackPane.setMargin(perClickText, new Insets(350, 0, 0, 0));
+        StackPane.setMargin(perSecondText, new Insets(520, 0, 0, 0)); //570 original
+        StackPane.setMargin(highlightedText, new Insets(-550, 0, 0, 0));
 
         root.setCenter(stackPane);
     }
