@@ -82,6 +82,15 @@ public class Client extends Application {
         this.myCursor = new MyCursor();
         this.ethereum = new Ethereum();
         this.dogeCoin = new DogeCoin();
+        this.nickname = null;
+    }
+
+    public Client(String nickname){
+        this.bitcoin = new Bitcoin();
+        this.myCursor = new MyCursor();
+        this.ethereum = new Ethereum();
+        this.dogeCoin = new DogeCoin();
+        this.nickname = nickname;
     }
 
     public static void main(String[] args) {
@@ -93,7 +102,10 @@ public class Client extends Application {
         try {
             primaryStage.setTitle("Crypto clicker");
             primaryStage.setResizable(false);
-            nickname = getUserNickname();
+            if(nickname == null) {
+                nickname = getUserNickname();
+            }
+
             highlightedText = new Text(String.valueOf(nickname));
 
             createScreen(primaryStage);
@@ -186,12 +198,15 @@ public class Client extends Application {
 
                 var line = reader.readLine();
 
-                if(secondsElapsed == 60 * 10) {
+                if(secondsElapsed == 10) {
+                    Thread.sleep(500);
                     endGame(line);
                 }
 
                 updateLeaderboard(line);
             }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -206,11 +221,23 @@ public class Client extends Application {
             String nick = playerStat[0];
             String nickCoins = playerStat[1];
 
-            alert.setContentText("Winner: " + nick + " with " + nickCoins + " coins " + "\n" + "Your coins: " + allCoins);
+            alert.setContentText("Winner: " + nick + " with " + String.format("%.2f", Double.parseDouble(nickCoins)) + " coins" + "\n" + "Your coins: " + allCoins);
 
-            alert.showAndWait();
+            Optional<ButtonType> result = alert.showAndWait();
+            result.ifPresent(buttonType -> {
+                if (buttonType == ButtonType.OK) {
+                    try {
+                        restartApplication();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
         });
-        System.exit(0);
+    }
+    private void restartApplication() throws Exception {
+        Application application = new Client(nickname);
+        application.start(new Stage());
     }
 
     private Socket createSocket(String host, int port) throws IOException {
