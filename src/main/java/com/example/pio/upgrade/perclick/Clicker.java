@@ -4,4 +4,7 @@ public interface Clicker {
     public boolean isAvailableToBuy(double coins);
 
     public double buyCursor();
+
+    public void resetValues();
+
 }

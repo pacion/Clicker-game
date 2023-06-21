@@ -7,8 +7,8 @@ class Leaderboard implements Serializable {
 
     private Map<String, Statistic> playerScores = new HashMap<>();
 
-    public void addOrUpdatePlayerScore(String key, Double value, String nickname) {
-        playerScores.put(key, new Statistic(value, nickname));
+    public void addOrUpdatePlayerScore(String key, Double value, String nickname, String counter, String seconds) {
+        playerScores.put(key, new Statistic(value, nickname, counter, seconds));
     }
 
     private void sortMapByScore() {

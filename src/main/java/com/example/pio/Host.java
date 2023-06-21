@@ -12,6 +12,7 @@ public class Host {
     private static final Leaderboard leaderboard = new Leaderboard();
 
     private static final int PORT = 8080;
+    private static int counterOfPlayers = 0;
 
     public static void main(String[] args) {
 
@@ -54,16 +55,23 @@ public class Host {
 
                     String[] parts = message.split(":");
 
-                    if (parts.length == 3) {
+                    if (parts.length == 5) {
                         String coinUser = parts[0].trim();
                         String nickUser = parts[1].trim();
                         String ipUser = parts[2].trim();
+                        String counter = parts[3].trim();
+                        String seconds = parts[4].trim();
+
+                        if(Integer.valueOf(counter) == 1) {
+                            counterOfPlayers++;
+                            //System.out.println("JEST TYLE: " + counterOfPlayers + "\n\n");
+                        }
 
                         try {
                             Double value = Double.parseDouble(coinUser);
 
                             synchronized (leaderboard) {
-                                leaderboard.addOrUpdatePlayerScore(ipUser, value, nickUser);
+                                leaderboard.addOrUpdatePlayerScore(ipUser, value, nickUser, String.valueOf(counterOfPlayers), seconds);
                             }
 
                             out.println(leaderboard.toString());

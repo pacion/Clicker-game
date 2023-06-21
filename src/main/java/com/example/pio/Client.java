@@ -51,7 +51,7 @@ public class Client extends Application {
     private Button fourthUpgrade;
     private BorderPane root;
     private Text timerText;
-    private long secondsElapsed = 0;
+    private long secondsElapsed = -1;
 
     private Text coins;
     private Text counterText;
@@ -76,6 +76,17 @@ public class Client extends Application {
     private Text[] usersCoins;
     private Text[] userUpgrades;
     private Text highlightedText;
+
+    private Button startButton;
+    private boolean gameOver;
+    private int counterOfPlayers = 1;
+    private int counterOfPlayers2 = 0;
+    private int flag = 0;
+    Timeline timeline;
+    Text cursorValue;
+    Text dogeCoinValue;
+    Text etherumValue;
+    Text bitcoinValue;
 
     public Client() {
         this.bitcoin = new Bitcoin();
@@ -113,7 +124,6 @@ public class Client extends Application {
             createCounters();
             setCounters();
             createTexts();
-            turnOnTimer();
             createRectangles();
 
             primaryStage.setScene(scene);
@@ -131,6 +141,23 @@ public class Client extends Application {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void addStartButton() {
+        startButton = new Button("START");
+        startButton.setPrefSize(100, 50);
+        startButton.setStyle("-fx-font-family: Arial; -fx-font-size: 20px; -fx-background-color: #DAA520; -fx-text-fill: #4719AB; -fx-font-weight: bold;");
+        startButton.setCursor(Cursor.HAND);
+        startButton.setOnAction(event -> {
+            if(secondsElapsed == -1 && counterOfPlayers2 == 2) {
+                turnOnTimer();
+            }
+        });
+        StackPane rootPane = new StackPane();
+        rootPane.setLayoutX(152);
+        rootPane.setLayoutY(700);
+        rootPane.getChildren().add(startButton);
+        mainPane.getChildren().add(rootPane);
     }
 
     private String getUserNickname() {
@@ -191,7 +218,7 @@ public class Client extends Application {
                 }
 
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -221,7 +248,8 @@ public class Client extends Application {
             String nick = playerStat[0];
             String nickCoins = playerStat[1];
 
-            alert.setContentText("Winner: " + nick + " with " + String.format("%.2f", Double.parseDouble(nickCoins)) + " coins" + "\n" + "Your coins: " + allCoins);
+            alert.setContentText("Winner: " + nick + " with " + String.format("%.2f", Double.parseDouble(nickCoins))
+                    + " coins" + "\n" + "Your coins: " + String.format("%.2f", allCoins));
 
             Optional<ButtonType> result = alert.showAndWait();
             result.ifPresent(buttonType -> {
@@ -253,7 +281,8 @@ public class Client extends Application {
     }
 
     private void sendData(PrintWriter writer, String nickname, Socket socket) {
-        writer.println(allCoins + ":" + nickname + ":" + socket.getLocalAddress().getHostAddress());
+        writer.println(allCoins + ":" + nickname + ":" + socket.getLocalAddress().getHostAddress() + ":" + counterOfPlayers + ":" + secondsElapsed);
+        counterOfPlayers = 0;
     }
 
     public void createScreen(Stage primaryStage) {
@@ -270,6 +299,7 @@ public class Client extends Application {
         createRectangles();
         createUpgrades();
         createHelpButton();
+        addStartButton();
 
         configurePrimaryStage(primaryStage);
 
@@ -467,9 +497,11 @@ public class Client extends Application {
         imageButton = createButton();
         imageButton.setGraphic(clickerImageView);
         imageButton.setOnAction(event -> {
-            currentCoins += myCursor.getCoinsPerClick();
-            allCoins += myCursor.getCoinsPerClick();
-            bumpCoinStats();
+            if(secondsElapsed != -1) {
+                currentCoins += myCursor.getCoinsPerClick();
+                allCoins += myCursor.getCoinsPerClick();
+                bumpCoinStats();
+            }
         });
 
         Pane pane = new Pane();
@@ -506,13 +538,13 @@ public class Client extends Application {
         Font font = Font.font("Arial", FontWeight.BOLD, 30);
         DropShadow dropShadow = createDropShadow();
 
-        counterText = createText("0.0", font, Color.FUCHSIA, dropShadow, 195, 220);
+        counterText = createText("0", font, Color.FUCHSIA, dropShadow, 195, 220);
         root.getChildren().add(counterText);
 
-        perClickText = createText("1.0", font, Color.FUCHSIA, dropShadow, 195, 610);
+        perClickText = createText("1", font, Color.FUCHSIA, dropShadow, 195, 610);
         root.getChildren().add(perClickText);
 
-        perSecondText = createText("0.0", font, Color.FUCHSIA, dropShadow, 195, 700);
+        perSecondText = createText("0", font, Color.FUCHSIA, dropShadow, 195, 700);
         root.getChildren().add(perSecondText);
 
         highlightedText.setFont(Font.font("Arial", FontWeight.BOLD, 30));
@@ -569,6 +601,10 @@ public class Client extends Application {
         timerText.setLayoutY(30);
         timerText.setFill(Color.WHITE);
         timerText.setFont(Font.font("Arial", FontWeight.SEMI_BOLD, 20));
+
+        timerText.setText("Time in seconds: 0");
+
+        root.getChildren().add(timerText);
     }
 
     public void showUser() {
@@ -619,7 +655,9 @@ public class Client extends Application {
     }
 
     public void turnOnTimer() {
-        Timeline timeline = new Timeline(
+        flag = 1;
+        secondsElapsed++;
+        timeline = new Timeline(
                 new KeyFrame(Duration.seconds(1), event -> {
                     upgrade();
                     Double coinsToAdd = dogeCoin.getCoinsPerSecond() + bitcoin.getCoinsPerSecond() + ethereum.getCoinsPerSecond();
@@ -631,8 +669,6 @@ public class Client extends Application {
 
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
-
-        root.getChildren().add(timerText);
     }
 
     public void createUpgrades() {
@@ -821,7 +857,6 @@ public class Client extends Application {
         mainPane.getChildren().addAll(userUpgrades[0], userUpgrades[1], userUpgrades[2], userUpgrades[3]);
     }
 
-
     private void updateLeaderboard(String message) {
         if (message != null) {
             String[] players = message.split("/");
@@ -831,12 +866,26 @@ public class Client extends Application {
                 String[] playerStat = players[i].split(":");
                 String nickname = playerStat[0];
                 String coins = playerStat[1];
+                String counter = playerStat[2];
+                String time = playerStat[3];
+
+                counterOfPlayers2 = Integer.valueOf(counter);
+                if(flag == 0) {
+                    secondsElapsed = Integer.valueOf(time);
+                    if(secondsElapsed == -1)
+                        timerText.setText("Time in seconds: 0");
+                    else {
+                        secondsElapsed--;
+                        turnOnTimer();
+                    }
+                }
 
                 nicknames[i].setText(nickname);
 
                 double score = Double.parseDouble(coins);
                 String formattedScore = df.format(score);
-                usersCoins[i].setText(formattedScore);
+                if(secondsElapsed != -1)
+                    usersCoins[i].setText(formattedScore);
                 usersCoins[i].setTextAlignment(TextAlignment.RIGHT);
             }
         }

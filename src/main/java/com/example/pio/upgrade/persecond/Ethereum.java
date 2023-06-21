@@ -21,4 +21,11 @@ public class Ethereum extends UpgradePerSecond implements Cryptocurrency {
         setPrice((int)(getPrice() + ((getPrice() * 1.15)/2)));
         return toReturn;
     }
+
+    @Override
+    public void resetValues() {
+        setPrice(100);
+        setAmount(0);
+        setCoinsPerSecond(0);
+    }
 }

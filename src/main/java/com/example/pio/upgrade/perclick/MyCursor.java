@@ -21,4 +21,11 @@ public class MyCursor extends UpgradePerClick implements Clicker {
         setPrice((int)(getPrice() + ((getPrice() * 1.15)/2)));
         return toReturn;
     }
+
+    @Override
+    public void resetValues() {
+        setPrice(10);
+        setAmount(0);
+        setCoinsPerClick(1D);
+    }
 }
