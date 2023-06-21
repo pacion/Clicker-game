@@ -28,11 +28,23 @@ class Leaderboard implements Serializable {
     public String toString() {
         sortMapByScore();
         StringBuilder sb = new StringBuilder();
+        boolean end = false;
 
         for (Map.Entry<String, Statistic> entry : playerScores.entrySet()) {
-            sb.append(entry.getValue().nickname).append(":").append(entry.getValue().score).append("/");
+            if(Integer.valueOf(entry.getValue().seconds) == 10 ){
+                end = true;
+            }
         }
 
+        for (Map.Entry<String, Statistic> entry : playerScores.entrySet()) {
+            if (!end) {
+                sb.append(entry.getValue().nickname).append(":").append(entry.getValue().score).append(":")
+                        .append(entry.getValue().counter).append(":").append(entry.getValue().seconds).append("/");
+            }else{
+                sb.append(entry.getValue().nickname).append(":").append(entry.getValue().score).append(":")
+                        .append(entry.getValue().counter).append(":").append("-1").append("/");
+            }
+        }
         return sb.toString();
     }
 }

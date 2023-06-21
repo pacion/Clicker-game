@@ -74,7 +74,13 @@ public class Host {
                                 leaderboard.addOrUpdatePlayerScore(ipUser, value, nickUser, String.valueOf(counterOfPlayers), seconds);
                             }
 
-                            out.println(leaderboard.toString());
+                            if(Integer.valueOf(seconds) >= 10) {
+                                out.println(leaderboard.toString());
+                            }else {
+                                out.println(leaderboard.toString());
+                            }
+
+                            //System.out.println("\nHOST: " + leaderboard.toString());
 
                         } catch (NumberFormatException e) {
                             out.println("Invalid integer format. Expected an integer value.");

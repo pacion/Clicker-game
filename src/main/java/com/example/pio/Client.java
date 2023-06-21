@@ -94,6 +94,7 @@ public class Client extends Application {
         this.ethereum = new Ethereum();
         this.dogeCoin = new DogeCoin();
         this.nickname = null;
+        this.gameOver = false;
     }
 
     public Client(String nickname){
@@ -102,6 +103,7 @@ public class Client extends Application {
         this.ethereum = new Ethereum();
         this.dogeCoin = new DogeCoin();
         this.nickname = nickname;
+        this.gameOver = false;
     }
 
     public static void main(String[] args) {
@@ -132,12 +134,23 @@ public class Client extends Application {
             Thread socketThread = new Thread(() -> {
                 try {
                     connectAndSendData(nickname);
+                    //moge tutaj wstawic kod, ktory zamknie mi cale okno?
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
 
             socketThread.start();
+
+            //System.out.println("\n\n\n\n\nZACZYNA CZEKAC\n\n\n\n\n\n");
+//
+            //while(socketThread.isAlive());
+//
+            //System.out.println("\n\n\n\n\nSKONCZYL CZEKAC\n\n\n\n\n\n");
+//
+            //primaryStage.close();
+            //Platform.exit();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -224,20 +237,28 @@ public class Client extends Application {
                 }
 
                 var line = reader.readLine();
+               // System.out.println("\n" + line);
 
-                if(secondsElapsed == 10) {
-                    Thread.sleep(500);
+                if (secondsElapsed == 10) {
+                    timeline.stop();
                     endGame(line);
+                    Thread.sleep(1000);
                 }
 
                 updateLeaderboard(line);
             }
+
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
     private void endGame(String line) {
+        if(gameOver)
+            return;
+
+        gameOver = true;
+
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Time ended");
@@ -253,19 +274,33 @@ public class Client extends Application {
 
             Optional<ButtonType> result = alert.showAndWait();
             result.ifPresent(buttonType -> {
-                if (buttonType == ButtonType.OK) {
-                    try {
-                        restartApplication();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+                if (buttonType == ButtonType.OK || secondsElapsed == -1) {
+                    restartApplication();
                 }
             });
         });
     }
-    private void restartApplication() throws Exception {
-        Application application = new Client(nickname);
-        application.start(new Stage());
+
+    private void restartApplication() {
+        flag = 0;
+        allCoins = 0D;
+        currentCoins = 0D;
+        myCursor.resetValues();
+        dogeCoin.resetValues();
+        ethereum.resetValues();
+        dogeCoin.resetValues();
+        counterPerSecond = 0D;
+        gameOver = false;
+        secondsElapsed = -1;
+        bumpCoinStats();
+        cursorValue.setText(String.valueOf(myCursor.getPrice()));
+        dogeCoinValue.setText(String.valueOf(dogeCoin.getPrice()));
+        etherumValue.setText(String.valueOf(ethereum.getPrice()));
+        bitcoinValue.setText(String.valueOf(bitcoin.getPrice()));
+        for(int i = 0; i < 4; ++i)
+            usersCoins[i].setText("0");
+        timerText.setText("Time in seconds: 0");
+        timeline.stop();
     }
 
     private Socket createSocket(String host, int port) throws IOException {
@@ -465,7 +500,7 @@ public class Client extends Application {
 
         for (int i = 0; i < 4; i++) {
             nicknames[i] = new Text();
-            nicknames[i].setText("-----");
+            nicknames[i].setText("---------------");
             nicknames[i].setFont(Font.font("Arial", FontWeight.THIN, 24));
             nicknames[i].setFill(Color.rgb(140, 20, 199));
             nicknames[i].setX(850);
@@ -684,7 +719,7 @@ public class Client extends Application {
         buttonTextCursor.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         buttonTextCursor.setFill(Color.BLACK);
 
-        Text cursorValue = new Text(String.valueOf(myCursor.getPrice()));
+        cursorValue = new Text(String.valueOf(myCursor.getPrice()));
         cursorValue.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         cursorValue.setFill(Color.BLACK);
 
@@ -719,7 +754,7 @@ public class Client extends Application {
         buttonTextDogeCoin.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         buttonTextDogeCoin.setFill(Color.BLACK);
 
-        Text dogeCoinValue = new Text(String.valueOf(dogeCoin.getPrice()));
+        dogeCoinValue = new Text(String.valueOf(dogeCoin.getPrice()));
         dogeCoinValue.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         dogeCoinValue.setFill(Color.BLACK);
 
@@ -755,7 +790,7 @@ public class Client extends Application {
         buttonTextEthereum.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         buttonTextEthereum.setFill(Color.BLACK);
 
-        Text etherumValue = new Text(String.valueOf(ethereum.getPrice()));
+        etherumValue = new Text(String.valueOf(ethereum.getPrice()));
         etherumValue.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         etherumValue.setFill(Color.BLACK);
 
@@ -791,7 +826,7 @@ public class Client extends Application {
         buttonTextBitcoin.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         buttonTextBitcoin.setFill(Color.BLACK);
 
-        Text bitcoinValue = new Text(String.valueOf(bitcoin.getPrice()));
+        bitcoinValue = new Text(String.valueOf(bitcoin.getPrice()));
         bitcoinValue.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         bitcoinValue.setFill(Color.BLACK);
 
