@@ -40,6 +40,7 @@ import java.util.Optional;
 public class Client extends Application {
 
     private static final String IP_HOST = "localhost";
+    private int TIME = 10;
 
     private Pane mainPane;
     private Scene scene;
@@ -134,22 +135,12 @@ public class Client extends Application {
             Thread socketThread = new Thread(() -> {
                 try {
                     connectAndSendData(nickname);
-                    //moge tutaj wstawic kod, ktory zamknie mi cale okno?
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
 
             socketThread.start();
-
-            //System.out.println("\n\n\n\n\nZACZYNA CZEKAC\n\n\n\n\n\n");
-//
-            //while(socketThread.isAlive());
-//
-            //System.out.println("\n\n\n\n\nSKONCZYL CZEKAC\n\n\n\n\n\n");
-//
-            //primaryStage.close();
-            //Platform.exit();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -237,9 +228,8 @@ public class Client extends Application {
                 }
 
                 var line = reader.readLine();
-               // System.out.println("\n" + line);
 
-                if (secondsElapsed == 10) {
+                if (secondsElapsed == TIME) {
                     timeline.stop();
                     endGame(line);
                     Thread.sleep(1000);
@@ -675,7 +665,7 @@ public class Client extends Application {
         StackPane.setMargin(imageButton, new Insets(-50, 0, 0, 0));
         StackPane.setMargin(counterText, new Insets(-350, 0, 0, 0));
         StackPane.setMargin(perClickText, new Insets(350, 0, 0, 0));
-        StackPane.setMargin(perSecondText, new Insets(520, 0, 0, 0)); //570 original
+        StackPane.setMargin(perSecondText, new Insets(520, 0, 0, 0));
         StackPane.setMargin(highlightedText, new Insets(-550, 0, 0, 0));
 
         root.setCenter(stackPane);

@@ -64,7 +64,6 @@ public class Host {
 
                         if(Integer.valueOf(counter) == 1) {
                             counterOfPlayers++;
-                            //System.out.println("JEST TYLE: " + counterOfPlayers + "\n\n");
                         }
 
                         try {
@@ -74,13 +73,7 @@ public class Host {
                                 leaderboard.addOrUpdatePlayerScore(ipUser, value, nickUser, String.valueOf(counterOfPlayers), seconds);
                             }
 
-                            if(Integer.valueOf(seconds) >= 10) {
-                                out.println(leaderboard.toString());
-                            }else {
-                                out.println(leaderboard.toString());
-                            }
-
-                            //System.out.println("\nHOST: " + leaderboard.toString());
+                            out.println(leaderboard.toString());
 
                         } catch (NumberFormatException e) {
                             out.println("Invalid integer format. Expected an integer value.");

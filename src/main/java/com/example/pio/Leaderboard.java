@@ -6,6 +6,7 @@ import java.util.*;
 class Leaderboard implements Serializable {
 
     private Map<String, Statistic> playerScores = new HashMap<>();
+    private int time = 10;
 
     public void addOrUpdatePlayerScore(String key, Double value, String nickname, String counter, String seconds) {
         playerScores.put(key, new Statistic(value, nickname, counter, seconds));
@@ -31,7 +32,7 @@ class Leaderboard implements Serializable {
         boolean end = false;
 
         for (Map.Entry<String, Statistic> entry : playerScores.entrySet()) {
-            if(Integer.valueOf(entry.getValue().seconds) == 10 ){
+            if(Integer.valueOf(entry.getValue().seconds) == time) {
                 end = true;
             }
         }
