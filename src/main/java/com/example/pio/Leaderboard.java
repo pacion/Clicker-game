@@ -6,7 +6,7 @@ import java.util.*;
 class Leaderboard implements Serializable {
 
     private Map<String, Statistic> playerScores = new HashMap<>();
-    private int time = 10;
+    private int time = 100;
 
     public void addOrUpdatePlayerScore(String key, Double value, String nickname, String counter, String seconds) {
         playerScores.put(key, new Statistic(value, nickname, counter, seconds));

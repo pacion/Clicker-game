@@ -36,11 +36,12 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.DecimalFormat;
 import java.util.Optional;
+import java.util.Random;
 
 public class Client extends Application {
 
     private static final String IP_HOST = "localhost";
-    private int TIME = 10;
+    private int TIME = 100;
 
     private Pane mainPane;
     private Scene scene;
@@ -135,6 +136,7 @@ public class Client extends Application {
             Thread socketThread = new Thread(() -> {
                 try {
                     connectAndSendData(nickname);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -216,6 +218,27 @@ public class Client extends Application {
             int i = 0;
             while (true) {
                 sendData(writer, nickname, socket);
+
+                if(myCursor.isAvailableToBuy(currentCoins)) {
+                    firstUpgrade.setStyle("-fx-background-color: lightgreen; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+                } else {
+                    firstUpgrade.setStyle("-fx-background-color: #e3e2ff; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+                }
+                if(dogeCoin.isAvailableToBuy(currentCoins)) {
+                    secondUpgrade.setStyle("-fx-background-color: lightgreen; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+                } else {
+                    secondUpgrade.setStyle("-fx-background-color: #e3e2ff; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+                }
+                if(ethereum.isAvailableToBuy(currentCoins)) {
+                    thirdUpgrade.setStyle("-fx-background-color: #lightgreen; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+                } else {
+                    thirdUpgrade.setStyle("-fx-background-color: #e3e2ff; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+                }
+                if(bitcoin.isAvailableToBuy(currentCoins)) {
+                    fourthUpgrade.setStyle("-fx-background-color: lightgreen; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+                } else {
+                    fourthUpgrade.setStyle("-fx-background-color: #e3e2ff; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;");
+                }
 
                 if (i == 1000000) {
                     break;
@@ -916,14 +939,14 @@ public class Client extends Application {
         }
     }
 
-    private void doSomethingWithButton(Button firstUpgrade) {
-        firstUpgrade.setOnMousePressed(event -> firstUpgrade.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+    private void doSomethingWithButton(Button upgrejd) {
+        upgrejd.setOnMousePressed(event -> upgrejd.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
 
-        firstUpgrade.setOnMouseReleased(event -> firstUpgrade.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
+        upgrejd.setOnMouseReleased(event -> upgrejd.setStyle("-fx-background-color: #FFFFFF; -fx-text-fill: white; -fx-alignment: baseline-left; -fx-padding: 0 0 0 10;"));
 
-        firstUpgrade.setOnMouseEntered(event -> firstUpgrade.setCursor(Cursor.HAND));
+        upgrejd.setOnMouseEntered(event -> upgrejd.setCursor(Cursor.HAND));
 
-        firstUpgrade.setOnMouseExited(event -> firstUpgrade.setCursor(Cursor.DEFAULT));
+        upgrejd.setOnMouseExited(event -> upgrejd.setCursor(Cursor.DEFAULT));
     }
 
     private void playTextAnimation() {
